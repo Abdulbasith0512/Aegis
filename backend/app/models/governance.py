@@ -178,3 +178,33 @@ class RecoveryAction(Base):
     # Relationships
     incident: Mapped[HealingIncident] = relationship(back_populates="recovery_actions")
 
+class CopilotSession(Base):
+    """
+    User session threads for the Regulatory Copilot chat.
+    """
+    __tablename__ = "copilot_sessions"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    messages: Mapped[list["CopilotMessage"]] = relationship(back_populates="session", cascade="all, delete-orphan")
+
+class CopilotMessage(Base):
+    """
+    Individual chat prompt and RAG answer entries in a CopilotSession.
+    """
+    __tablename__ = "copilot_messages"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    session_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("copilot_sessions.id", ondelete="CASCADE"), nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(50), nullable=False, index=True) # user, assistant
+    content: Mapped[str] = mapped_column(String(4000), nullable=False)
+    sources: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True) # citations JSON list
+    report_html: Mapped[Optional[str]] = mapped_column(String(10000), nullable=True) # printable report template
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    session: Mapped[CopilotSession] = relationship(back_populates="messages")
+

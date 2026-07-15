@@ -8,7 +8,7 @@ from app.core.logging import setup_logging
 from app.core.exceptions import register_exception_handlers
 from app.api.swagger import customize_swagger
 from app.api import health, version
-from app.api.v1.endpoints import auth, agents, transactions, compliance, chaos, explainability, users, admin, trust, consensus, reviews, observability, self_healing
+from app.api.v1.endpoints import auth, agents, transactions, compliance, chaos, explainability, users, admin, trust, consensus, reviews, observability, self_healing, copilot
 
 # Setup system-wide structured logging prior to server bootstrap
 setup_logging()
@@ -56,6 +56,7 @@ app.include_router(consensus.router, prefix="/api/v1")
 app.include_router(reviews.router, prefix="/api/v1")
 app.include_router(observability.router, prefix="/api/v1")
 app.include_router(self_healing.router, prefix="/api/v1")
+app.include_router(copilot.router, prefix="/api/v1")
 app.include_router(agents.router, prefix="/api/v1")
 app.include_router(transactions.router, prefix="/api/v1")
 app.include_router(compliance.router, prefix="/api/v1")
