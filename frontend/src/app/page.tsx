@@ -46,7 +46,7 @@ export default function Home() {
         </p>
 
         {/* Dashboards Access Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-6xl">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 w-full max-w-7xl">
           {/* Card 1: Trust Telemetry */}
           <Link href="/trust-dashboard" className="group">
             <div className="h-full rounded-2xl border border-slate-800 bg-[#121620]/40 p-8 backdrop-blur-md text-left transition-all duration-300 hover:border-cyan-500 hover:bg-[#121620]/60 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col justify-between">
@@ -168,6 +168,24 @@ export default function Home() {
                 </p>
               </div>
               <span className="text-xs font-mono font-bold text-amber-400 group-hover:translate-x-2 transition-all duration-300 inline-flex items-center gap-1">
+                Enter Console →
+              </span>
+            </div>
+          </Link>
+
+          {/* Card 8: Self-Healing Engine */}
+          <Link href="/self-healing" className="group">
+            <div className="h-full rounded-2xl border border-slate-800 bg-[#121620]/40 p-8 backdrop-blur-md text-left transition-all duration-300 hover:border-emerald-500 hover:bg-[#121620]/60 hover:shadow-[0_0_20px_rgba(16,185,129,0.15)] flex flex-col justify-between">
+              <div>
+                <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-6 font-mono text-lg group-hover:scale-110 transition-all duration-300">
+                  🩹
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Self-Healing</h3>
+                <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                  Track automated failover workflows, switch backup models, rollbacks, and recovery timeline flowchart states.
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold text-emerald-400 group-hover:translate-x-2 transition-all duration-300 inline-flex items-center gap-1">
                 Enter Console →
               </span>
             </div>

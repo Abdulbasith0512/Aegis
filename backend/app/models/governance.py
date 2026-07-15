@@ -145,3 +145,36 @@ class ChaosExperiment(Base):
     completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
     metrics: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
 
+class HealingIncident(Base):
+    """
+    AI system anomalies and failures events.
+    """
+    __tablename__ = "healing_incidents"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    agent_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    failure_type: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), default="detected", index=True) # detected, healing, resolved, failed
+    description: Mapped[str] = mapped_column(String(500), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+    # Relationships
+    recovery_actions: Mapped[list["RecoveryAction"]] = relationship(back_populates="incident", cascade="all, delete-orphan")
+
+class RecoveryAction(Base):
+    """
+    Chronological steps logged during automated self-healing events.
+    """
+    __tablename__ = "recovery_actions"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    incident_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("healing_incidents.id", ondelete="CASCADE"), nullable=False, index=True)
+    action_step: Mapped[str] = mapped_column(String(100), nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="pending", index=True) # pending, running, completed, failed
+    details: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+    executed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    incident: Mapped[HealingIncident] = relationship(back_populates="recovery_actions")
+
