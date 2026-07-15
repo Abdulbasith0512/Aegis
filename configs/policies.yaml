@@ -1,0 +1,43 @@
+policies:
+  - id: "POL-RBI-101"
+    type: "RBI"
+    version: "1.0.0"
+    name: "Foreign Outward Remittance Limit"
+    description: "Limits foreign currency transfer transactions under Liberalised Remittance Scheme rules without specific tax checks."
+    rules:
+      - field: "currency"
+        operator: "equals"
+        value: "USD"
+      - field: "amount"
+        operator: "less_than_or_equal"
+        value: 10000.00
+
+  - id: "POL-AML-202"
+    type: "AML"
+    version: "1.0.0"
+    name: "Structuring Protection"
+    description: "Flags transactions that fall immediately below reporting thresholds (smurfing limits)."
+    rules:
+      - field: "amount"
+        operator: "not_between"
+        value: [4500.00, 4999.99]
+
+  - id: "POL-KYC-303"
+    type: "KYC"
+    version: "1.0.0"
+    name: "Active Account Enforcements"
+    description: "Enforces active and fully verified customer verification profiles."
+    rules:
+      - field: "account.status"
+        operator: "equals"
+        value: "active"
+
+  - id: "POL-GOV-404"
+    type: "AI_GOVERNANCE"
+    version: "1.0.0"
+    name: "AI Decision Trust Score Baseline"
+    description: "Ensures AI supervisor recommendations match safety confidence indexes."
+    rules:
+      - field: "trust_score"
+        operator: "greater_than_or_equal"
+        value: 75
