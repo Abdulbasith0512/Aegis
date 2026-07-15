@@ -1,0 +1,41 @@
+# AegisAI Application Policy Configuration Template
+# ==============================================================================
+
+system:
+  environment: development
+  log_level: info
+  port: 8000
+  host: 0.0.0.0
+
+agents:
+  supervised_list:
+    - name: fraud_agent
+      version: 1.0.0
+      enabled: true
+    - name: aml_agent
+      version: 1.0.0
+      enabled: true
+    - name: kyc_agent
+      version: 1.0.0
+      enabled: true
+    - name: device_agent
+      version: 1.0.0
+      enabled: true
+    - name: behavior_agent
+      version: 1.0.0
+      enabled: true
+    - name: compliance_agent
+      version: 1.0.0
+      enabled: true
+
+policies:
+  transaction_limits:
+    max_amount_unapproved: 5000.00
+    require_human_above: 10000.00
+  kyc:
+    require_document_match: true
+    allow_unverified_device: false
+
+chaos_parameters:
+  injection_probability: 0.05
+  latency_milliseconds_max: 500
