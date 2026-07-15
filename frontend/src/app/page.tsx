@@ -208,6 +208,24 @@ export default function Home() {
               </span>
             </div>
           </Link>
+
+          {/* Card 10: Neo4j Knowledge Graph */}
+          <Link href="/knowledge-graph" className="group">
+            <div className="h-full rounded-2xl border border-slate-800 bg-[#121620]/40 p-8 backdrop-blur-md text-left transition-all duration-300 hover:border-cyan-500 hover:bg-[#121620]/60 hover:shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col justify-between">
+              <div>
+                <div className="h-10 w-10 rounded-lg bg-cyan-500/10 flex items-center justify-center text-cyan-400 mb-6 font-mono text-lg group-hover:scale-110 transition-all duration-300">
+                  🕸️
+                </div>
+                <h3 className="text-xl font-bold text-white mb-2">Knowledge Graph</h3>
+                <p className="text-xs text-slate-400 leading-relaxed mb-6">
+                  Visualize accounts relationships, execute shortest paths pathfindings, and trace circular transfer loops.
+                </p>
+              </div>
+              <span className="text-xs font-mono font-bold text-cyan-400 group-hover:translate-x-2 transition-all duration-300 inline-flex items-center gap-1">
+                Enter Console →
+              </span>
+            </div>
+          </Link>
         </div>
       </main>
 
