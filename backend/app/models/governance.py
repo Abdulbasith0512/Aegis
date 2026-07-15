@@ -56,15 +56,22 @@ class PolicyCheck(Base):
 
 class Explanation(Base):
     """
-    Explainability attributions and justifications generated for predictions.
+    Explainability attributions, timelines, and graphs generated for agent decisions.
     """
     __tablename__ = "explanations"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     prediction_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("predictions.id", ondelete="CASCADE"), nullable=False, index=True)
-    explanation_text: Mapped[str] = mapped_column(String(1000), nullable=False)
-    feature_attributions: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False) # SHAP key-value map
-    explanation_vector: Mapped[Optional[list[float]]] = mapped_column(ARRAY(Float), nullable=True) # pgvector compatible format
+    human_readable: Mapped[str] = mapped_column(String(1000), nullable=False)
+    machine_readable: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    decision_timeline: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    evidence_graph: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    feature_importance: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    confidence_reasoning: Mapped[str] = mapped_column(String(1000), nullable=False)
+    supporting_policies: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    contributing_agents: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    explainability_score: Mapped[float] = mapped_column(Float, nullable=False)
+    explanation_vector: Mapped[Optional[list[float]]] = mapped_column(ARRAY(Float), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     # Relationships
