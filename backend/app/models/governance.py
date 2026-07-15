@@ -129,3 +129,19 @@ class ComplianceReport(Base):
 
     # Relationships
     generated_by: Mapped["User"] = relationship(back_populates="compliance_reports")
+
+class ChaosExperiment(Base):
+    """
+    AI system fault injection experiment configurations and metrics.
+    """
+    __tablename__ = "chaos_experiments"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    experiment_type: Mapped[str] = mapped_column(String(50), nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String(50), default="scheduled", index=True)
+    target_agent: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    scheduled_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    metrics: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB, nullable=True)
+
