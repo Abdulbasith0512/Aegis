@@ -90,6 +90,7 @@ class HumanReview(Base):
     comments: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
     assigned_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     reviewed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    sla_deadline: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
     # Relationships
     transaction: Mapped["Transaction"] = relationship(back_populates="human_reviews")
