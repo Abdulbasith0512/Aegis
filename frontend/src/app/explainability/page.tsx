@@ -162,9 +162,9 @@ export default function ExplainabilityDashboard() {
 
                 {/* Render Nodes */}
                 {activeSession.graph.nodes.map((node) => {
-                  let fill = "rgba(18, 22, 32, 0.9)";
+                  const fill = "rgba(18, 22, 32, 0.9)";
                   let border = "#1e293b";
-                  let labelColor = "#ffffff";
+                  const labelColor = "#ffffff";
                   
                   if (node.status === "passed" || node.status === "active") {
                     border = "#10b981"; // Emerald

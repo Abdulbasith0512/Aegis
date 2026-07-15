@@ -53,16 +53,28 @@ const SIMULATED_VIOLATIONS = [
   { id: "v-3", tx_ref: "TX-99801", rule_id: "POL-AML-202", status: "fail", date: "Jul 14, 11:20", details: "amount (4800.0) is between structured smurfing limits" }
 ];
 
+interface SimulationPolicyResult {
+  id: string;
+  name: string;
+  status: string;
+  details: string;
+}
+
+interface SimulationResult {
+  overall_status: string;
+  policies_checked: SimulationPolicyResult[];
+}
+
 export default function PolicyDashboard() {
-  const [activePolicies, setActivePolicies] = useState(SIMULATED_POLICIES);
-  const [violations, setViolations] = useState(SIMULATED_VIOLATIONS);
+  const [activePolicies] = useState(SIMULATED_POLICIES);
+  const [violations] = useState(SIMULATED_VIOLATIONS);
   
   // Simulator states
   const [simTxAmount, setSimTxAmount] = useState("250.00");
   const [simTxCurrency, setSimTxCurrency] = useState("USD");
   const [simTxStatus, setSimTxStatus] = useState("active");
   const [simTrustScore, setSimTrustScore] = useState("90");
-  const [simulationResult, setSimulationResult] = useState<any | null>(null);
+  const [simulationResult, setSimulationResult] = useState<SimulationResult | null>(null);
 
   const handleSimulate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,7 +249,7 @@ export default function PolicyDashboard() {
                 </div>
                 
                 <div className="space-y-2">
-                  {simulationResult.policies_checked.map((res: any) => (
+                  {simulationResult.policies_checked.map((res: SimulationPolicyResult) => (
                     <div key={res.id} className="p-2.5 rounded bg-slate-900/60 border border-slate-800 text-[11px] leading-relaxed">
                       <div className="flex items-center justify-between mb-1 font-mono font-bold">
                         <span className="text-slate-300">{res.id}</span>
