@@ -1,0 +1,143 @@
+/* ==========================================================================
+   AegisAI Enterprise Dashboard — Design Token Layer
+   Dark-first. 14-step neutral scale. Single brand accent. Semantic risk states.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* --------------------------------------------------------------------------
+   Surface Elevation System (dark-first)
+   -------------------------------------------------------------------------- */
+:root {
+  /* ── Surfaces ── */
+  --surface-0: #09090b;    /* app background */
+  --surface-1: #0f0f14;    /* sidebar, panels */
+  --surface-2: #141419;    /* cards, table rows */
+  --surface-3: #1c1c24;    /* hover states, elevated cards */
+  --surface-4: #24242f;    /* active/selected states */
+
+  /* ── Borders ── */
+  --border-0: #1c1c24;     /* subtle dividers */
+  --border-1: #27272f;     /* card borders */
+  --border-2: #35353f;     /* input borders, focus rings */
+  --border-accent: #00d4ff33; /* accent border (transparent) */
+
+  /* ── Neutral Gray Scale (14 steps) ── */
+  --gray-950: #09090b;
+  --gray-900: #111115;
+  --gray-850: #161619;
+  --gray-800: #1c1c22;
+  --gray-750: #22222a;
+  --gray-700: #2a2a35;
+  --gray-600: #3a3a48;
+  --gray-500: #52525e;
+  --gray-400: #71717a;
+  --gray-300: #a1a1aa;
+  --gray-200: #c4c4cc;
+  --gray-150: #d4d4dc;
+  --gray-100: #e4e4e8;
+  --gray-50:  #f4f4f6;
+
+  /* ── Brand Accent ── */
+  --accent:       #00d4ff;
+  --accent-dim:   #00d4ff22;
+  --accent-hover: #33ddff;
+  --accent-muted: #00d4ff88;
+
+  /* ── Risk Semantic Colors ── */
+  --risk-critical:      #ff3b3b;
+  --risk-critical-dim:  #ff3b3b22;
+  --risk-critical-text: #ff6b6b;
+
+  --risk-high:      #ff7a00;
+  --risk-high-dim:  #ff7a0022;
+  --risk-high-text: #ff9a40;
+
+  --risk-medium:      #f59e0b;
+  --risk-medium-dim:  #f59e0b22;
+  --risk-medium-text: #fbbf24;
+
+  --risk-low:      #22c55e;
+  --risk-low-dim:  #22c55e22;
+  --risk-low-text: #4ade80;
+
+  --risk-safe:      #06b6d4;
+  --risk-safe-dim:  #06b6d422;
+  --risk-safe-text: #22d3ee;
+
+  /* ── Status Colors ── */
+  --status-success: #22c55e;
+  --status-warning: #f59e0b;
+  --status-error:   #ef4444;
+  --status-info:    #3b82f6;
+
+  /* ── Typography ── */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+
+  /* Type scale */
+  --text-11: 0.6875rem;   /* 11px — micro labels */
+  --text-12: 0.75rem;     /* 12px — table cell text, badges */
+  --text-13: 0.8125rem;   /* 13px — secondary body */
+  --text-14: 0.875rem;    /* 14px — primary body */
+  --text-16: 1rem;        /* 16px — section titles */
+  --text-20: 1.25rem;     /* 20px — page headings */
+  --text-28: 1.75rem;     /* 28px — KPI values */
+  --text-36: 2.25rem;     /* 36px — hero stats */
+
+  /* ── Spacing ── */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* ── Radius ── */
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+
+  /* ── Motion ── */
+  --motion-fast:   150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --motion-slow:   300ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* ── Shell dimensions ── */
+  --sidebar-width: 220px;
+  --sidebar-collapsed-width: 52px;
+  --topbar-height: 48px;
+
+  /* ── Scrollbar ── */
+  scrollbar-width: thin;
+  scrollbar-color: var(--gray-700) transparent;
+}
+
+/* Light mode overrides */
+[data-theme="light"] {
+  --surface-0: #f8f8fa;
+  --surface-1: #ffffff;
+  --surface-2: #f2f2f5;
+  --surface-3: #e8e8ed;
+  --surface-4: #dcdce3;
+  --border-0: #e4e4e8;
+  --border-1: #d4d4db;
+  --border-2: #bbbbc4;
+  --gray-950: #f8f8fa;
+  --gray-900: #f2f2f5;
+  --gray-800: #e8e8ed;
+  --gray-700: #d4d4db;
+  --gray-600: #bbbbc4;
+  --gray-500: #8e8e9a;
+  --gray-400: #6e6e78;
+  --gray-300: #52525c;
+  --gray-200: #3a3a42;
+  --gray-150: #2a2a32;
+  --gray-100: #1c1c22;
+  --gray-50:  #09090b;
+  scrollbar-color: var(--gray-600) transparent;
+}
