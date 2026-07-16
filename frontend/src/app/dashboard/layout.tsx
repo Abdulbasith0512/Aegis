@@ -11,7 +11,7 @@ import {
   Users, Bot, Shield, Brain, FileText, UserCheck,
   AlertTriangle, BarChart3, Settings, Search,
   Bell, Sun, Moon, Server, ChevronDown, X, LogOut,
-  User as UserIcon, ChevronLeft, ChevronRight, Home, ShieldAlert,
+  User as UserIcon, ChevronLeft, ChevronRight, Home, ShieldAlert, Cpu
 } from "lucide-react";
 
 // ── Sidebar Navigation Config ──────────────────────────────────────────────
@@ -44,6 +44,7 @@ const NAV_GROUPS = [
   {
     label: "Operations",
     items: [
+      { label: "MLOps Platform", path: "/dashboard/mlops", icon: Cpu },
       { label: "Chaos Engineering", path: "/dashboard/chaos", icon: Zap },
       { label: "Incidents", path: "/dashboard/incidents", icon: AlertTriangle },
       { label: "Analytics", path: "/dashboard/analytics", icon: BarChart3 },

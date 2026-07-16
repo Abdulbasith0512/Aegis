@@ -21,6 +21,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     Manages FastAPI application startup and shutdown lifespan cycles.
     """
     # Startup tasks: Init database pools, trigger connections checks
+    from app.database.database import engine
+    from app.models import Base
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     yield
     # Shutdown tasks: Clean connections and free memory
     pass

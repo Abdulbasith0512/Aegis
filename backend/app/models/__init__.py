@@ -2,7 +2,7 @@ from app.database.database import Base
 from app.models.users import Permission, Role, User, role_permissions
 from app.models.banking import Branch, Merchant, Customer, Account, Beneficiary
 from app.models.transactions import Device, Transaction
-from app.models.agents import AIAgent, ModelVersion, Prediction
+from app.models.agents import AIAgent, ModelVersion, Prediction, MLOpsDeployment, MLflowRun, DeploymentHistory
 from app.models.governance import ConsensusVote, TrustScore, PolicyCheck, Explanation, HumanReview, AuditLog, ComplianceReport, HealingIncident, RecoveryAction, CopilotSession, CopilotMessage
 from app.models.operations import ChaosTest, Alert, Incident
 
@@ -22,6 +22,9 @@ __all__ = [
     "AIAgent",
     "ModelVersion",
     "Prediction",
+    "MLOpsDeployment",
+    "MLflowRun",
+    "DeploymentHistory",
     "ConsensusVote",
     "TrustScore",
     "PolicyCheck",

@@ -36,6 +36,8 @@ class ModelVersion(Base):
     accuracy_benchmark: Mapped[float] = mapped_column(Float, default=0.00)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     deployed_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    hyperparameters: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict)
+    metrics: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict)
 
     # Relationships
     agent: Mapped[AIAgent] = relationship(back_populates="model_versions")
@@ -60,3 +62,54 @@ class Prediction(Base):
     transaction: Mapped["Transaction"] = relationship(back_populates="predictions")
     model_version: Mapped[ModelVersion] = relationship(back_populates="predictions")
     explanations: Mapped[List["Explanation"]] = relationship(back_populates="prediction")
+
+class MLOpsDeployment(Base):
+    """
+    Active traffic routing rules (Canary splits, Shadow paths, A/B sets) for supervised ML models.
+    """
+    __tablename__ = "mlops_deployments"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    agent_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ai_agents.id", ondelete="CASCADE"), nullable=False, unique=True, index=True)
+    deployment_type: Mapped[str] = mapped_column(String(50), default="production", index=True) # production, canary, shadow, ab_testing
+    
+    active_version_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("model_versions.id", ondelete="SET NULL"), nullable=True)
+    canary_version_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("model_versions.id", ondelete="SET NULL"), nullable=True)
+    canary_split: Mapped[int] = mapped_column(default=100) # percentage of traffic to Canary (e.g. 10)
+    
+    shadow_version_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("model_versions.id", ondelete="SET NULL"), nullable=True)
+    
+    ab_version_a_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("model_versions.id", ondelete="SET NULL"), nullable=True)
+    ab_version_b_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("model_versions.id", ondelete="SET NULL"), nullable=True)
+    ab_split: Mapped[int] = mapped_column(default=50) # percentage of traffic to A (e.g. 50)
+    
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+class MLflowRun(Base):
+    """
+    Simulated MLflow run logs storing training hyperparams and accuracy evaluation metrics.
+    """
+    __tablename__ = "mlflow_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    agent_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ai_agents.id", ondelete="CASCADE"), nullable=False, index=True)
+    run_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    experiment_id: Mapped[str] = mapped_column(String(100), default="default")
+    parameters: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict)
+    metrics: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict)
+    status: Mapped[str] = mapped_column(String(50), default="FINISHED")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+class DeploymentHistory(Base):
+    """
+    Audit log trail recording model promotion, canary splits, and rollback triggers.
+    """
+    __tablename__ = "deployment_history"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    agent_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("ai_agents.id", ondelete="CASCADE"), nullable=False, index=True)
+    action: Mapped[str] = mapped_column(String(100), nullable=False, index=True) # promote, rollback, configure
+    details: Mapped[str] = mapped_column(String(500), nullable=False)
+    performed_by: Mapped[str] = mapped_column(String(100), default="system")
+    timestamp: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
