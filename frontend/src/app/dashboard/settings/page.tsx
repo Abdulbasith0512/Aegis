@@ -126,19 +126,52 @@ export default function Settings() {
   const [retentionDays, setRetentionDays] = useState(90);
 
   // ── Handlers ─────────────────────────────────────────────────────────────
-  const handleInvite = useCallback(() => {
+  const handleInvite = useCallback(async () => {
     if (!inviteEmail.trim()) return;
-    const initials = inviteEmail.split('@')[0].slice(0, 2).toUpperCase();
-    setTeam(prev => [...prev, {
-      name: inviteEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-      role: inviteRole,
-      email: inviteEmail,
-      avatar: initials,
-      lastActive: 'Just invited',
-    }]);
-    setInviteEmail('');
-    setInviteRole('Risk Analyst');
-    setInviteOpen(false);
+
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/users/invite", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email: inviteEmail,
+          role_name: inviteRole
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        alert(`Failed to send invitation: ${errorData.detail || "Unknown error"}`);
+        return;
+      }
+
+      const initials = inviteEmail.split('@')[0].slice(0, 2).toUpperCase();
+      setTeam(prev => [...prev, {
+        name: inviteEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        role: inviteRole,
+        email: inviteEmail,
+        avatar: initials,
+        lastActive: 'Just invited',
+      }]);
+      alert(`Invitation sent successfully to ${inviteEmail}! Check the backend terminal console logs for the setup url link.`);
+    } catch (err) {
+      // Safe fallback if server is not running
+      const initials = inviteEmail.split('@')[0].slice(0, 2).toUpperCase();
+      setTeam(prev => [...prev, {
+        name: inviteEmail.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        role: inviteRole,
+        email: inviteEmail,
+        avatar: initials,
+        lastActive: 'Just invited',
+      }]);
+      alert("Local sandbox invitation created (Backend offline).");
+    } finally {
+      setInviteEmail('');
+      setInviteRole('Risk Analyst');
+      setInviteOpen(false);
+    }
   }, [inviteEmail, inviteRole]);
 
   const handleGenerateKey = useCallback(() => {

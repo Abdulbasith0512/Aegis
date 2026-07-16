@@ -1,6 +1,7 @@
 import uuid
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.dependencies import get_db, get_current_user, require_permission
@@ -153,3 +154,77 @@ async def delete_user_record(
         description=f"Deleted user {user.email}",
         resource_id=str(user_id)
     )
+
+class UserInviteRequest(BaseModel):
+    email: EmailStr
+    role_name: str
+
+@router.post("/invite")
+async def invite_team_member(
+    payload: UserInviteRequest,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db)
+):
+    """
+    Invites a new colleague. Creates a pending user row and triggers invitation mail.
+    """
+    user_repo = UserRepository(db)
+    audit_repo = AuditRepository(db)
+    
+    # 1. Look up role by name
+    role = await user_repo.get_role_by_name(payload.role_name.lower())
+    if not role:
+        roles = await user_repo.list_roles()
+        if roles:
+            role = roles[0]
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Specified role '{payload.role_name}' does not exist."
+            )
+
+    # 2. Check if email already registered
+    existing = await user_repo.get_user_by_email(payload.email)
+    if existing:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User email is already registered."
+        )
+
+    # 3. Create placeholder user
+    import secrets
+    temp_pass = secrets.token_urlsafe(16)
+    
+    user_create = UserCreate(
+        email=payload.email,
+        password=temp_pass,
+        role_id=role.id
+    )
+    user = await user_repo.create_user(user_create)
+
+    # 4. Generate setup link
+    invite_link = f"http://localhost:3000/auth/register?email={payload.email}&token={user.id}"
+
+    # 5. Trigger background email sending task
+    from app.services.email import email_service
+    background_tasks.add_task(
+        email_service.send_invite_email,
+        payload.email,
+        role.name.upper(),
+        invite_link
+    )
+
+    # 6. Log audit event
+    await audit_repo.log_action(
+        actor_id=user.id, # Log action under created user ID as mock initiator
+        action_type="user_invite",
+        description=f"Dispatched invitation link to {payload.email}",
+        resource_id=str(user.id),
+        metadata={"role": role.name}
+    )
+
+    return {
+        "status": "success",
+        "message": f"Invitation email scheduled successfully to {payload.email}",
+        "userId": str(user.id)
+    }

@@ -60,6 +60,13 @@ class Settings(BaseSettings):
     ANTHROPIC_API_KEY: str = Field(default="")
     HUGGINGFACE_API_TOKEN: str = Field(default="")
 
+    # Outbound Mail Server (SMTP) Configurations
+    SMTP_HOST: str = Field(default="")
+    SMTP_PORT: int = Field(default=587)
+    SMTP_USER: str = Field(default="")
+    SMTP_PASSWORD: str = Field(default="")
+    SMTP_FROM: str = Field(default="noreply@aegisai.io")
+
     # Core Banking Governance Policies
     HUMAN_REVIEW_THRESHOLD: int = Field(default=75, description="Auditor review limit trigger score.")
     TRUST_SCORE_MIN_THRESHOLD: int = Field(default=50, description="Hard block score limit trigger.")
