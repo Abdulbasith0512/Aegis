@@ -75,7 +75,8 @@ export default function DashboardLayout({
     <div
       style={{
         display: "flex",
-        minHeight: "100vh",
+        height: "100vh",
+        overflow: "hidden",
         background: "#09090b",
         color: "#e2e8f0",
         fontFamily: "'Inter', system-ui, -apple-system, sans-serif",
