@@ -1,19 +1,12 @@
 @import './tokens.css';
 
-*, *::before, *::after {
+.dashboard-wrapper, .dashboard-wrapper *, .dashboard-wrapper *::before, .dashboard-wrapper *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
 
-html {
-  font-size: 16px;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-rendering: optimizeLegibility;
-}
-
-body {
+.dashboard-wrapper {
   font-family: var(--font-sans);
   font-size: var(--text-14);
   font-weight: 400;
@@ -21,6 +14,8 @@ body {
   color: var(--gray-200);
   background-color: var(--surface-0);
   overflow: hidden;
+  width: 100vw;
+  height: 100vh;
 }
 
 /* ── Typography utilities ── */
@@ -35,10 +30,10 @@ body {
 .text-mono { font-family: var(--font-mono); }
 
 /* ── Scrollbars ── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--gray-700); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--gray-600); }
+.dashboard-wrapper ::-webkit-scrollbar { width: 6px; height: 6px; }
+.dashboard-wrapper ::-webkit-scrollbar-track { background: transparent; }
+.dashboard-wrapper ::-webkit-scrollbar-thumb { background: var(--gray-700); border-radius: 3px; }
+.dashboard-wrapper ::-webkit-scrollbar-thumb:hover { background: var(--gray-600); }
 
 /* ── Focus ring ── */
 :focus-visible {
@@ -48,7 +43,7 @@ body {
 }
 
 /* ── Selection ── */
-::selection {
+.dashboard-wrapper ::selection {
   background-color: var(--accent-dim);
   color: var(--accent);
 }
