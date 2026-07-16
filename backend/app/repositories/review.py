@@ -4,7 +4,8 @@ from datetime import datetime
 from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload, joinedload
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.governance import HumanReview, TrustScore, Explanation, PolicyCheck, Prediction
+from app.models.governance import HumanReview, TrustScore, Explanation, PolicyCheck
+from app.models.agents import Prediction
 from app.models.transactions import Transaction
 from app.models.banking import Account, Customer
 from app.models.users import User
