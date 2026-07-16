@@ -11,7 +11,7 @@ import {
   Users, Bot, Shield, Brain, FileText, UserCheck,
   AlertTriangle, BarChart3, Settings, Search,
   Bell, Sun, Moon, Server, ChevronDown, X, LogOut,
-  User as UserIcon, ChevronLeft, ChevronRight, Home,
+  User as UserIcon, ChevronLeft, ChevronRight, Home, ShieldAlert,
 } from "lucide-react";
 
 // ── Sidebar Navigation Config ──────────────────────────────────────────────
@@ -38,6 +38,7 @@ const NAV_GROUPS = [
       { label: "Policies", path: "/dashboard/policies", icon: FileText },
       { label: "Human Reviews", path: "/dashboard/reviews", icon: UserCheck },
       { label: "Trust Center", path: "/dashboard/trust-center", icon: Shield },
+      { label: "AI Security", path: "/dashboard/security", icon: ShieldAlert },
     ],
   },
   {

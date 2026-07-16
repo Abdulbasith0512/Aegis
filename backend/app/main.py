@@ -8,7 +8,9 @@ from app.core.logging import setup_logging
 from app.core.exceptions import register_exception_handlers
 from app.api.swagger import customize_swagger
 from app.api import health, version
-from app.api.v1.endpoints import auth, agents, transactions, compliance, chaos, explainability, users, admin, trust, consensus, reviews, observability, self_healing, copilot, graph
+from app.api.v1.endpoints import auth, agents, transactions, compliance, chaos, explainability, users, admin, trust, consensus, reviews, observability, self_healing, copilot, graph, security
+from app.middleware.prompt_firewall import PromptFirewallMiddleware
+from app.middleware.rate_limit import RateLimitMiddleware
 
 # Setup system-wide structured logging prior to server bootstrap
 setup_logging()
@@ -40,6 +42,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Add rate limiting and prompt firewall protection
+app.add_middleware(RateLimitMiddleware, limit=100, window_sec=60)
+app.add_middleware(PromptFirewallMiddleware)
+
 # Register Custom Exception Handler Policies
 register_exception_handlers(app)
 
@@ -63,6 +69,7 @@ app.include_router(transactions.router, prefix="/api/v1")
 app.include_router(compliance.router, prefix="/api/v1")
 app.include_router(chaos.router, prefix="/api/v1")
 app.include_router(explainability.router, prefix="/api/v1")
+app.include_router(security.router, prefix="/api/v1")
 
 
 # Apply Branding and Documentation Overrides to Swagger UI
