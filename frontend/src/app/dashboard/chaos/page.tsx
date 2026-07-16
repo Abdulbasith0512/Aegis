@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ReactFlow, {
   Background, Controls,
   useNodesState, useEdgesState,
@@ -120,8 +120,8 @@ const [DEP_NODES, DEP_EDGES] = (() => {
 // ── Chaos Engineering Page ─────────────────────────────────────────────────
 export default function ChaosEngineering() {
   const [experiments, setExperiments] = useState(EXPERIMENTS);
-  const [nodes, , onNodesChange] = useNodesState(DEP_NODES);
-  const [edges, , onEdgesChange] = useEdgesState(DEP_EDGES);
+  const [nodes, setNodes, onNodesChange] = useNodesState(DEP_NODES);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(DEP_EDGES);
   const [runningId, setRunningId] = useState<string | null>('exp-4');
 
   const runExperiment = (id: string) => {
@@ -142,6 +142,52 @@ export default function ChaosEngineering() {
       );
     }, 4000);
   };
+
+  const stopExperiment = (id: string) => {
+    setRunningId(null);
+    setExperiments(prev =>
+      prev.map(e => e.id === id ? { ...e, status: 'idle' } : e)
+    );
+  };
+
+  useEffect(() => {
+    let fraudHealth: HealthState = 'healthy';
+    let dbHealth: HealthState = 'healthy';
+    let redisHealth: HealthState = 'healthy';
+    let mlHealth: HealthState = 'healthy';
+
+    if (runningId === 'exp-1') fraudHealth = 'failed';
+    else if (runningId === 'exp-2') dbHealth = 'failed';
+    else if (runningId === 'exp-3') redisHealth = 'failed';
+    else if (runningId === 'exp-4') mlHealth = 'degraded';
+    else if (runningId === 'exp-6') mlHealth = 'failed';
+    else if (runningId === 'exp-7') fraudHealth = 'degraded';
+
+    const updatedNodes: Node[] = [
+      serviceNode('gateway', 'API Gateway', 200, 40, 'healthy'),
+      serviceNode('fraud', 'Fraud Engine', 50, 160, fraudHealth, runningId === 'exp-1'),
+      serviceNode('rule', 'Rule Evaluator', 350, 160, 'healthy'),
+      serviceNode('ml', 'ML Inference', 50, 280, mlHealth, runningId === 'exp-4' || runningId === 'exp-6'),
+      serviceNode('identity', 'Identity Svc', 350, 280, 'healthy'),
+      serviceNode('db', 'PostgreSQL', 200, 400, dbHealth, runningId === 'exp-2'),
+      serviceNode('redis', 'Redis Cache', 500, 280, redisHealth, runningId === 'exp-3'),
+      serviceNode('audit', 'Audit Ledger', 500, 400, 'healthy'),
+    ];
+
+    const updatedEdges: Edge[] = [
+      serviceEdge('se1', 'gateway', 'fraud', fraudHealth === 'healthy' ? 'healthy' : 'degraded'),
+      serviceEdge('se2', 'gateway', 'rule', 'healthy'),
+      serviceEdge('se3', 'fraud', 'ml', mlHealth === 'healthy' ? 'healthy' : 'failed'),
+      serviceEdge('se4', 'fraud', 'db', dbHealth === 'healthy' ? 'healthy' : 'degraded'),
+      serviceEdge('se5', 'rule', 'identity', 'healthy'),
+      serviceEdge('se6', 'rule', 'db', 'healthy'),
+      serviceEdge('se7', 'identity', 'redis', 'healthy'),
+      serviceEdge('se8', 'db', 'audit', 'healthy'),
+    ];
+
+    setNodes(updatedNodes);
+    setEdges(updatedEdges);
+  }, [runningId, setNodes, setEdges]);
 
   const STATUS_ICON: Record<Experiment['status'], React.ReactNode> = {
     idle: <Clock size={13} color="var(--gray-500)" />,
@@ -232,7 +278,13 @@ export default function ChaosEngineering() {
                 <button
                   className={`btn ${exp.status === 'running' ? 'btn-danger' : 'btn-outline'}`}
                   style={{ flexShrink: 0, padding: '4px 10px', fontSize: 11 }}
-                  onClick={() => exp.status === 'idle' || exp.status === 'completed' || exp.status === 'failed' ? runExperiment(exp.id) : null}
+                  onClick={() => {
+                    if (exp.status === 'running') {
+                      stopExperiment(exp.id);
+                    } else {
+                      runExperiment(exp.id);
+                    }
+                  }}
                   disabled={exp.status === 'running' && exp.id !== runningId}
                 >
                   {exp.status === 'running' ? <><Square size={11} /> Stop</> : <><Play size={11} /> Run</>}
