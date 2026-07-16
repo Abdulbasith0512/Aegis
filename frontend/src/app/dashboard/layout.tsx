@@ -65,6 +65,11 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <div
@@ -305,7 +310,11 @@ export default function DashboardLayout({
             background: "#09090b",
           }}
         >
-          {children}
+          {mounted ? children : (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--gray-600)', fontFamily: 'var(--font-mono)', fontSize: 'var(--text-12)' }}>
+              INITIALIZING OPERATIONS CONSOLE...
+            </div>
+          )}
         </main>
       </div>
 
