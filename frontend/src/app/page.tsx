@@ -42,8 +42,14 @@ export default function Home() {
         </h1>
 
         <p className="text-base sm:text-lg text-slate-400 max-w-2xl mb-12 leading-relaxed">
-          Supervises, validates, explains, and secures machine learning decisions inside financial banking infrastructures. Built on Clean Architecture and LangGraph workflows.
         </p>
+
+        {/* Action Button */}
+        <div className="mb-10">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 text-white font-bold hover:shadow-[0_0_30px_rgba(99,102,241,0.4)] transition-all duration-300 transform hover:-translate-y-0.5">
+            <span>Launch Operations Dashboard Console 🚀</span>
+          </Link>
+        </div>
 
         {/* Dashboards Access Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-7xl">
