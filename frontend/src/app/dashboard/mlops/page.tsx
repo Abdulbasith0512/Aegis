@@ -467,10 +467,14 @@ export default function MLOpsPlatform() {
         fetch(`http://localhost:8000/api/v1/agents/history/${agent.id}`),
       ]);
 
-      if (vRes.ok) setVersions(await vRes.json());
-      if (runRes.ok) setMlflowRuns(await runRes.json());
-      if (telRes.ok) setTelemetry(await telRes.json());
-      if (histRes.ok) setHistory(await histRes.json());
+      if (!vRes.ok || !runRes.ok || !telRes.ok || !histRes.ok) {
+        throw new Error("Details fetch failed");
+      }
+
+      setVersions(await vRes.json());
+      setMlflowRuns(await runRes.json());
+      setTelemetry(await telRes.json());
+      setHistory(await histRes.json());
 
       syncFormFromAgent(agent);
     } catch {
@@ -863,7 +867,7 @@ export default function MLOpsPlatform() {
                   <Sliders size={16} style={{ color: ACCENT }} /> Live Deployment Control Node
                 </h3>
 
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, minHeight: 180 }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
                     <div>
                       <label style={labelStyle}>Routing Strategy</label>
