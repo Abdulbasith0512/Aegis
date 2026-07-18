@@ -227,3 +227,45 @@ class ComparisonReport(Base):
     comparison_data: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
     summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class BenchmarkRun(Base):
+    """
+    Execution instance tracking dedicated benchmarking comparisons.
+    """
+    __tablename__ = "benchmark_runs"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    status: Mapped[str] = mapped_column(String(50), default="pending", index=True) # pending, running, completed, failed
+    parameters: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    metrics: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+
+
+class GovernanceReport(Base):
+    """
+    Registry for compiled governance reports.
+    """
+    __tablename__ = "governance_reports"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    report_type: Mapped[str] = mapped_column(String(100), nullable=False) # executive, benchmark, agent, weekly, monthly
+    report_format: Mapped[str] = mapped_column(String(50), nullable=False) # pdf, csv, json
+    summary: Mapped[str] = mapped_column(Text, nullable=False, default="")
+    details: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+
+class MaturityReport(Base):
+    """
+    Organizational AI governance maturity report.
+    """
+    __tablename__ = "maturity_reports"
+
+    id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
+    maturity_level: Mapped[str] = mapped_column(String(50), nullable=False)
+    scores: Mapped[Dict[str, Any]] = mapped_column(JSONB, nullable=False, default=dict)
+    recommendations: Mapped[List[str]] = mapped_column(ARRAY(String), nullable=False, default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+

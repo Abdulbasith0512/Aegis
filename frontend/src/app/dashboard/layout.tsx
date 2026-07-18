@@ -11,7 +11,7 @@ import {
   Users, Bot, Shield, Brain, FileText, UserCheck,
   AlertTriangle, BarChart3, Settings, Search,
   Bell, Sun, Moon, Server, ChevronDown, X, LogOut,
-  User as UserIcon, ChevronLeft, ChevronRight, Home, ShieldAlert, Cpu, Network, TestTube2
+  User as UserIcon, ChevronLeft, ChevronRight, Home, ShieldAlert, Cpu, Network, TestTube2, Layers
 
 // ── Sidebar Navigation Config ──────────────────────────────────────────────
 const NAV_GROUPS = [
@@ -30,6 +30,7 @@ const NAV_GROUPS = [
       { label: "Agents", path: "/dashboard/agents", icon: Bot },
       { label: "Explainability", path: "/dashboard/explainability", icon: Brain },
       { label: "AI Research Lab", path: "/dashboard/research", icon: TestTube2 },
+      { label: "AI Intelligence", path: "/dashboard/intelligence", icon: Layers },
     ],
   },
   {

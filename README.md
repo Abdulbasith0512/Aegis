@@ -123,6 +123,25 @@ The **AI Research Lab** allows researchers and administrators to simulate, bench
 
 ---
 
+## AegisAI Intelligence & Analytics Platform
+
+The **AegisAI Intelligence Platform** converts operational metrics into executive KPIs and downloadable governance summaries:
+
+- **Executive Intelligence Dashboard**: Instantly inspects governance health score meters, model drifts, alert timelines, and top performing agent leaderboards at `/dashboard/intelligence`.
+- **Downloadable Auditing Reports**: Complies on-demand PDF summaries, CSV metrics lists, and JSON parameter configurations.
+- **APIs**:
+  - `GET /api/v1/intelligence/governance-score`: Retrieves dynamic governance scores (0-100) and risk grading checks.
+  - `GET /api/v1/intelligence/reputation`: Leaderboards and standings lists for all AI agent nodes.
+  - `GET /api/v1/intelligence/maturity`: Evaluates current maturity scores (Level 1 to 5) across Monitoring, Automation, Security, and Compliance.
+  - `GET /api/v1/intelligence/failure-index`: Platforms-wide anomalies and incident frequency indexes.
+  - `GET /api/v1/intelligence/benchmarks`: Model accuracy, precision, F1, and latency comparisons.
+  - `POST /api/v1/intelligence/benchmark/run`: Starts a new models benchmark run.
+  - `POST /api/v1/intelligence/report/generate`: Generates executive compliance PDF/CSV/JSON audits.
+  - `GET /api/v1/intelligence/report/download/{id}`: Download binary report summaries.
+
+---
+
+
 
 ## License
 
