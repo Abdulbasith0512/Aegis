@@ -1,5 +1,6 @@
 import pytest
 import uuid
+from datetime import datetime, timezone
 from typing import Dict, Any, List
 from app.services.intelligence import IntelligenceService
 
@@ -32,7 +33,7 @@ class MockIntelligenceRepository:
                 self.drift_score = d.get("drift_score", 96.0)
                 self.incident_frequency = d.get("incident_rate", 2.0)
                 self.human_review_rate = d.get("human_review_rate", 15.0)
-                self.created_at = __import__("datetime").datetime.utcnow()
+                self.created_at = datetime.now(timezone.utc)
         mock = ScoreMock(score_data)
         self.scores.append(mock)
         return mock
@@ -69,7 +70,7 @@ class MockIntelligenceRepository:
                 self.human_overrides = d["human_overrides"]
                 self.policy_violations = d["policy_violations"]
                 self.model_drift = d["model_drift"]
-                self.last_updated = __import__("datetime").datetime.utcnow()
+                self.last_updated = datetime.now(timezone.utc)
         mock = AgentMock(rep_data)
         self.reputations.append(mock)
         return mock
@@ -83,7 +84,7 @@ class MockIntelligenceRepository:
                 self.maturity_level = d["maturity_level"]
                 self.scores = d["scores"]
                 self.recommendations = d["recommendations"]
-                self.created_at = __import__("datetime").datetime.utcnow()
+                self.created_at = datetime.now(timezone.utc)
         return MatMock(mat_data)
 
     async def get_latest_failure_index(self) -> None:
@@ -102,7 +103,7 @@ class MockIntelligenceRepository:
                 self.recovery_failures = d.get("recovery_failures", 0)
                 self.drift_events = d.get("drift_events", 0)
                 self.root_cause_summary = d.get("root_cause_summary", "")
-                self.created_at = __import__("datetime").datetime.utcnow()
+                self.created_at = datetime.now(timezone.utc)
         return FailMock(index_data)
 
     async def list_benchmark_results(self) -> List[Any]:
@@ -124,7 +125,7 @@ class MockIntelligenceRepository:
                 self.report_format = f
                 self.summary = s
                 self.details = d
-                self.created_at = __import__("datetime").datetime.utcnow()
+                self.created_at = datetime.now(timezone.utc)
         mock = RepMock(type_, format_, summary, details)
         self.reports.append(mock)
         return mock

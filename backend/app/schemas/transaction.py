@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Dict, Any, Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class DeviceTelemetry(BaseModel):
     """Telemetry parameters for the device agent evaluation."""
@@ -44,8 +44,7 @@ class TransactionInterceptResponse(BaseModel):
     requires_human_review: bool = False
     review_id: Optional[uuid.UUID] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TransactionOut(BaseModel):
     """Detailed transaction data for ledger queries."""
@@ -62,8 +61,7 @@ class TransactionOut(BaseModel):
     initiated_at: datetime
     completed_at: Optional[datetime] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class TransactionDetailResponse(BaseModel):
     """Detailed transaction data combined with agent predictions and trust score context."""
@@ -74,8 +72,7 @@ class TransactionDetailResponse(BaseModel):
     predictions: List[Dict[str, Any]] = []
     explanation: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class ReplayResponse(BaseModel):
     """Status details resulting from transaction pipeline re-execution."""

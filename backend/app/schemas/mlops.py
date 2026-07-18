@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from typing import Dict, Any, List, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 
 class ModelVersionCreate(BaseModel):
     version_string: str = Field(..., description="E.g., v1.1.0")
@@ -21,8 +21,7 @@ class ModelVersionOut(BaseModel):
     hyperparameters: Dict[str, Any] = {}
     metrics: Dict[str, Any] = {}
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class MLOpsDeploymentOut(BaseModel):
     agent_id: uuid.UUID
@@ -53,8 +52,7 @@ class MLflowRunOut(BaseModel):
     status: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class DeploymentConfigUpdate(BaseModel):
     agent_id: uuid.UUID
@@ -79,5 +77,4 @@ class DeploymentHistoryOut(BaseModel):
     performed_by: str
     timestamp: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
