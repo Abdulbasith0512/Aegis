@@ -5,6 +5,7 @@ from app.models.transactions import Device, Transaction
 from app.models.agents import AIAgent, ModelVersion, Prediction, MLOpsDeployment, MLflowRun, DeploymentHistory
 from app.models.governance import ConsensusVote, TrustScore, PolicyCheck, Explanation, HumanReview, AuditLog, ComplianceReport, HealingIncident, RecoveryAction, CopilotSession, CopilotMessage
 from app.models.operations import ChaosTest, Alert, Incident
+from app.models.workflows import Workflow, WorkflowVersion, WorkflowNode, WorkflowEdge, WorkflowRun, WorkflowLog
 
 __all__ = [
     "Base",
@@ -39,4 +40,10 @@ __all__ = [
     "RecoveryAction",
     "CopilotSession",
     "CopilotMessage",
+    "Workflow",
+    "WorkflowVersion",
+    "WorkflowNode",
+    "WorkflowEdge",
+    "WorkflowRun",
+    "WorkflowLog",
 ]
