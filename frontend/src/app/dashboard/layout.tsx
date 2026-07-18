@@ -11,8 +11,7 @@ import {
   Users, Bot, Shield, Brain, FileText, UserCheck,
   AlertTriangle, BarChart3, Settings, Search,
   Bell, Sun, Moon, Server, ChevronDown, X, LogOut,
-  User as UserIcon, ChevronLeft, ChevronRight, Home, ShieldAlert, Cpu, Network
-} from "lucide-react";
+  User as UserIcon, ChevronLeft, ChevronRight, Home, ShieldAlert, Cpu, Network, TestTube2
 
 // ── Sidebar Navigation Config ──────────────────────────────────────────────
 const NAV_GROUPS = [
@@ -47,6 +46,7 @@ const NAV_GROUPS = [
     items: [
       { label: "MLOps Platform", path: "/dashboard/mlops", icon: Cpu },
       { label: "Chaos Engineering", path: "/dashboard/chaos", icon: Zap },
+      { label: "Digital Twin 2.0", path: "/dashboard/simulation", icon: TestTube2 },
       { label: "Incidents", path: "/dashboard/incidents", icon: AlertTriangle },
       { label: "Analytics", path: "/dashboard/analytics", icon: BarChart3 },
     ],
