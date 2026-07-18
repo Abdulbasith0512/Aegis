@@ -107,7 +107,7 @@ const SIMULATED_HISTORY: ReviewCase[] = [
 export default function HumanReviewCenter() {
   const [queue, setQueue] = useState<ReviewCase[]>(SIMULATED_QUEUE);
   const [history, setHistory] = useState<ReviewCase[]>(SIMULATED_HISTORY);
-  
+
   const [activeTab, setActiveTab] = useState<"queue" | "history">("queue");
   const [selectedCase, setSelectedCase] = useState<ReviewCase | null>(null);
 
@@ -125,7 +125,7 @@ export default function HumanReviewCenter() {
     if (status === "approved" || status === "rejected") {
       // Remove from active queue
       setQueue(queue.filter(q => q.id !== selectedCase.id));
-      
+
       // Add to history
       const newHistoryItem = {
         id: selectedCase.id,
@@ -176,21 +176,19 @@ export default function HumanReviewCenter() {
         <div className="flex gap-2 p-1 rounded-lg bg-slate-950 border border-slate-850">
           <button
             onClick={() => { setActiveTab("queue"); setSelectedCase(null); }}
-            className={`px-4 py-1.5 text-xs font-bold font-mono rounded transition-all ${
-              activeTab === "queue"
+            className={`px-4 py-1.5 text-xs font-bold font-mono rounded transition-all ${activeTab === "queue"
                 ? "bg-rose-600 text-white shadow-[0_0_15px_rgba(244,63,94,0.3)]"
                 : "text-slate-400 hover:text-slate-200"
-            }`}
+              }`}
           >
             Review Queue ({queue.length})
           </button>
           <button
             onClick={() => { setActiveTab("history"); setSelectedCase(null); }}
-            className={`px-4 py-1.5 text-xs font-bold font-mono rounded transition-all ${
-              activeTab === "history"
+            className={`px-4 py-1.5 text-xs font-bold font-mono rounded transition-all ${activeTab === "history"
                 ? "bg-rose-600 text-white shadow-[0_0_15px_rgba(244,63,94,0.3)]"
                 : "text-slate-400 hover:text-slate-200"
-            }`}
+              }`}
           >
             Audit History ({history.length})
           </button>
@@ -199,24 +197,23 @@ export default function HumanReviewCenter() {
 
       {/* Grid Workspace */}
       <section className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        
+
         {/* Left Column: Case Queue Lists */}
         <div className="xl:col-span-2 space-y-6">
           <h2 className="text-lg font-bold text-white tracking-tight uppercase font-mono">
             {activeTab === "queue" ? "Pending Auditor Review" : "Completed Audit Ledger"}
           </h2>
-          
+
           <div className="space-y-4">
             {activeTab === "queue" ? (
               queue.map((q) => (
                 <div
                   key={q.id}
                   onClick={() => setSelectedCase(q)}
-                  className={`p-6 rounded-xl border transition-all duration-300 cursor-pointer ${
-                    selectedCase?.id === q.id
+                  className={`p-6 rounded-xl border transition-all duration-300 cursor-pointer ${selectedCase?.id === q.id
                       ? "bg-[#121620]/80 border-rose-500 shadow-[0_0_20px_rgba(244,63,94,0.1)]"
                       : "bg-[#121620]/40 border-slate-800 hover:border-slate-700"
-                  }`}
+                    }`}
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                     <div>
@@ -227,7 +224,7 @@ export default function HumanReviewCenter() {
                         {q.customer_name}
                       </h3>
                     </div>
-                    
+
                     {/* SLA Indicators */}
                     <div className="flex items-center gap-3">
                       {q.is_sla_breached ? (
@@ -239,7 +236,7 @@ export default function HumanReviewCenter() {
                           SLA Active
                         </span>
                       )}
-                      
+
                       <span className="text-xs font-mono font-bold text-slate-400">
                         Limit: {q.amount.toLocaleString()} {q.currency}
                       </span>
@@ -259,9 +256,8 @@ export default function HumanReviewCenter() {
                 <div key={h.id} className="p-6 rounded-xl border border-slate-850 bg-[#121620]/20 text-xs font-mono">
                   <div className="flex items-center justify-between mb-3">
                     <span className="font-bold text-white text-sm">{h.customer_name}</span>
-                    <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${
-                      h.status === "approved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
-                    }`}>
+                    <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${h.status === "approved" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                      }`}>
                       {h.status.toUpperCase()}
                     </span>
                   </div>
@@ -275,7 +271,7 @@ export default function HumanReviewCenter() {
                 </div>
               ))
             )}
-            
+
             {((activeTab === "queue" && queue.length === 0) || (activeTab === "history" && history.length === 0)) && (
               <div className="text-center py-20 border border-slate-800/50 rounded-xl bg-[#121620]/10 text-slate-500">
                 No case logs recorded in this section.
@@ -288,23 +284,21 @@ export default function HumanReviewCenter() {
         <div className="rounded-xl border border-slate-800 bg-[#121620]/40 p-6 backdrop-blur-md flex flex-col justify-between">
           <div>
             <h2 className="text-lg font-bold text-white tracking-tight mb-6">Evidence Viewer & Action Portal</h2>
-            
+
             {selectedCase ? (
               <div className="space-y-6">
-                
+
                 {/* Visual Trust Indicator */}
                 <div className="flex items-center justify-between border-b border-slate-800/60 pb-4">
                   <div>
                     <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">Trust Rating</span>
-                    <strong className={`text-xl font-bold font-mono ${
-                      selectedCase.trust_score < 70 ? "text-rose-400" : "text-amber-400"
-                    }`}>
+                    <strong className={`text-xl font-bold font-mono ${selectedCase.trust_score < 70 ? "text-rose-400" : "text-amber-400"
+                      }`}>
                       {selectedCase.trust_score} / 100
                     </strong>
                   </div>
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${
-                    selectedCase.status === "escalated" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-slate-900 text-slate-400 border border-slate-800"
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold font-mono ${selectedCase.status === "escalated" ? "bg-amber-500/10 text-amber-400 border border-amber-500/20" : "bg-slate-900 text-slate-400 border border-slate-800"
+                    }`}>
                     {selectedCase.status.toUpperCase()}
                   </span>
                 </div>
@@ -323,9 +317,8 @@ export default function HumanReviewCenter() {
                   <div className="relative border-l-2 border-slate-800 pl-4 space-y-4 ml-2">
                     {selectedCase.timeline?.map((step, idx) => (
                       <div key={idx} className="relative">
-                        <span className={`absolute -left-[23px] top-1.5 h-3.5 w-3.5 rounded-full border-4 border-[#0d0f14] ${
-                          step.status === "success" ? "bg-emerald-500" : (step.status === "warning" ? "bg-amber-500" : "bg-rose-500")
-                        }`}></span>
+                        <span className={`absolute -left-[23px] top-1.5 h-3.5 w-3.5 rounded-full border-4 border-[#0d0f14] ${step.status === "success" ? "bg-emerald-500" : (step.status === "warning" ? "bg-amber-500" : "bg-rose-500")
+                          }`}></span>
                         <div className="flex justify-between text-xs font-mono">
                           <span className="text-white font-semibold">{step.event}</span>
                           <span className="text-slate-500">{step.duration}</span>
@@ -366,9 +359,8 @@ export default function HumanReviewCenter() {
                           <span className="font-bold text-white block">{pol.rule_id}</span>
                           <span className="text-[10px] text-slate-500">{pol.name}</span>
                         </div>
-                        <span className={`inline-flex px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${
-                          pol.status === "pass" ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
-                        }`}>
+                        <span className={`inline-flex px-1.5 py-0.2 rounded text-[9px] font-bold uppercase ${pol.status === "pass" ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                          }`}>
                           {pol.status}
                         </span>
                       </div>
@@ -379,7 +371,7 @@ export default function HumanReviewCenter() {
                 {/* Actions Verdict Submissions Form */}
                 <div className="border-t border-slate-850 pt-4 space-y-4">
                   <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block">Submit Resolution Verdict</span>
-                  
+
                   <div>
                     <textarea
                       placeholder="Enter Auditor comments (at least 10 chars justifying decision)..."

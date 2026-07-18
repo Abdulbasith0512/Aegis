@@ -29,6 +29,7 @@ const NAV_GROUPS = [
       { label: "Knowledge Graph", path: "/dashboard/knowledge-graph", icon: GitBranch },
       { label: "Agents", path: "/dashboard/agents", icon: Bot },
       { label: "Explainability", path: "/dashboard/explainability", icon: Brain },
+      { label: "AI Research Lab", path: "/dashboard/research", icon: TestTube2 },
     ],
   },
   {

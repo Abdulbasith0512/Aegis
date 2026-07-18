@@ -155,8 +155,57 @@ class UserRepository:
         """
         Creates a permission identifier.
         """
-        permission = Permission(name=name, description=description)
         self.db.add(permission)
         await self.db.commit()
         await self.db.refresh(permission)
         return permission
+
+    async def create_mock_dev_user(self) -> User:
+        """
+        Creates and returns a default dev administrator profile for dev environments.
+        """
+        # Ensure 'admin' role exists
+        res = await self.db.execute(select(Role).where(Role.name == "admin"))
+        role = res.scalars().first()
+        if not role:
+            role = Role(id=uuid.uuid4(), name="admin", description="Administrator Role")
+            self.db.add(role)
+            await self.db.commit()
+            await self.db.refresh(role)
+
+        # Check if permissions exist, map to admin
+        perms = ["read:transactions", "write:transactions", "write:policies"]
+        for p_name in perms:
+            res_p = await self.db.execute(select(Permission).where(Permission.name == p_name))
+            p = res_p.scalars().first()
+            if not p:
+                p = Permission(id=uuid.uuid4(), name=p_name, description=f"Allows {p_name}")
+                self.db.add(p)
+                await self.db.commit()
+                await self.db.refresh(p)
+            if p not in role.permissions:
+                role.permissions.append(p)
+        
+        await self.db.commit()
+
+        # Ensure dev user exists
+        res_u = await self.db.execute(select(User).where(User.email == "dev@aegisai.com"))
+        user = res_u.scalars().first()
+        if not user:
+            user = User(
+                id=uuid.uuid4(),
+                email="dev@aegisai.com",
+                hashed_password=get_password_hash("development_bypass_password"),
+                role_id=role.id,
+                is_active=True
+            )
+            self.db.add(user)
+            await self.db.commit()
+            
+        res_f = await self.db.execute(
+            select(User)
+            .where(User.id == user.id)
+            .options(selectinload(User.role).selectinload(Role.permissions))
+        )
+        return res_f.scalars().first()
+

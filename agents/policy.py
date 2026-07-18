@@ -1,33 +1,58 @@
 from typing import Any, Dict, List
+import time
 from agents.base import BaseGovernanceAgent
+from app.services.policy_engine import PolicyEngine
 
 class PolicyAgent(BaseGovernanceAgent):
     """
     Validates proposed transaction metadata against strict banking constraints.
+    Integrates the real backend PolicyEngine with policies.yaml configurations.
     """
     def __init__(self) -> None:
         super().__init__(name="PolicyAgent")
+        self.engine = PolicyEngine()
 
     async def _execute(self, state: Dict[str, Any], logs: List[str]) -> Dict[str, Any]:
         tx_data = state.get("transaction", {})
-        amount = tx_data.get("amount", 0.0)
+        amount = float(tx_data.get("amount", 0.0))
         currency = tx_data.get("currency", "USD")
         
-        logs.append(f"Checking transaction policies against currency: {currency}")
+        logs.append(f"Checking transaction policies against currency: {currency} and amount: {amount}")
         
-        # Enforce strict policy: Block unapproved currencies
-        if currency != "USD":
-            logs.append("Warning: Cross-border transaction currency is not USD.")
-            return {
-                "confidence_score": 0.00,
-                "reasoning": "Policy violation: only USD transactions are permitted under current settings."
+        t_start = time.perf_counter()
+        
+        # Build transaction representation matching dot-notation references in rules config
+        # E.g. POL-KYC-303 evaluates account.status
+        account_status = state.get("account_status", "active")
+        
+        tx_payload = {
+            **tx_data,
+            "account": {
+                "status": account_status
             }
-            
-        if amount > 100000.0:
-            logs.append("Warning: Transaction exceeds standard limit of 100,000 USD.")
+        }
+        
+        # Evaluate transaction through PolicyEngine
+        res = self.engine.evaluate_transaction(tx_payload)
+        
+        t_end = time.perf_counter()
+        logs.append(f"PolicyEngine execution complete. Status: {res.overall_status} (latency: {(t_end - t_start)*1000:.2f}ms)")
+
+        # Map results to state for downstream consensus & supervisor
+        state["policy_simulation"] = res.model_dump()
+        
+        reasons = []
+        confidence = 1.00
+        for policy in res.policies_checked:
+            if policy.status == "fail":
+                reasons.append(f"Policy violation: {policy.name} ({policy.policy_id})")
+                confidence = 0.00 # Hard fail indicators
+
+        if res.overall_status == "fail":
+            logs.append("Warning: Transaction violates deterministic rule constraints.")
             return {
                 "confidence_score": 0.00,
-                "reasoning": "Policy violation: transaction exceeds maximum allowed limit."
+                "reasoning": "; ".join(reasons)
             }
 
         return {

@@ -1,5 +1,13 @@
 from typing import Any, Dict, List
+import time
 from agents.base import BaseGovernanceAgent
+
+def get_field(obj: Any, key: str, default: Any = None) -> Any:
+    if not obj:
+        return default
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
 
 class DeviceAgent(BaseGovernanceAgent):
     """
@@ -10,28 +18,38 @@ class DeviceAgent(BaseGovernanceAgent):
 
     async def _execute(self, state: Dict[str, Any], logs: List[str]) -> Dict[str, Any]:
         tx_data = state.get("transaction", {})
-        device_profile = tx_data.get("device", {})
+        device_profile = get_field(tx_data, "device", {})
         
-        logs.append(f"Evaluating device fingerprint: {device_profile.get('fingerprint')}")
+        fingerprint = get_field(device_profile, "fingerprint", "unknown")
+        logs.append(f"Evaluating device fingerprint: {fingerprint}")
         
-        is_emulator = device_profile.get("is_emulator", False)
-        ip = device_profile.get("ip_address", "")
+        is_emulator = get_field(device_profile, "is_emulator", False)
+        ip = get_field(device_profile, "ip_address", "")
         
+        t_start = time.perf_counter()
+        
+        risk_score = 0.0
         if is_emulator:
+            risk_score += 0.55
             logs.append("Warning: Terminal is running on an emulator.")
-            return {
-                "confidence_score": 0.45,
-                "reasoning": "High risk: emulator execution signature detected."
-            }
-            
         if not ip:
+            risk_score += 0.40
             logs.append("Warning: Ingested transaction lacks IP tracking.")
+            
+        confidence = float(1.0 - risk_score)
+        t_end = time.perf_counter()
+        
+        logs.append(f"Device Profiler risk score: {risk_score:.4f} (latency: {(t_end - t_start)*1000:.2f}ms)")
+        
+        state["device_prob"] = risk_score
+
+        if risk_score > 0.50:
             return {
-                "confidence_score": 0.60,
-                "reasoning": "Medium risk: transaction metadata lacks device IP address."
+                "confidence_score": confidence,
+                "reasoning": f"High risk: suspicious emulator execution footprint (device risk: {risk_score:.2f})."
             }
 
         return {
-            "confidence_score": 0.95,
+            "confidence_score": confidence,
             "reasoning": "Low risk: device integrity check passed."
         }

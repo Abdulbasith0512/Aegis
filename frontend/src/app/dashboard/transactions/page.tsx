@@ -75,13 +75,50 @@ const COLUMNS: ColumnDef<Transaction>[] = [
 
 // ── Transactions Page ──────────────────────────────────────────────────────
 export default function Transactions() {
-  const [allTxs, setAllTxs] = useState<Transaction[]>(MOCK_TRANSACTIONS);
+  const [allTxs, setAllTxs] = useState<Transaction[]>([]);
   const [newRowIds, setNewRowIds] = useState<Set<string>>(new Set());
   const [newCount, setNewCount] = useState(0);
   const [pendingRows, setPendingRows] = useState<Transaction[]>([]);
   const [search, setSearch] = useState('');
   const [activeFilters, setActiveFilters] = useState<Record<string, string[]>>({});
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
+
+  // Fetch from backend API
+  useEffect(() => {
+    async function loadHistory() {
+      try {
+        const res = await fetch("http://localhost:8000/api/v1/transactions/history");
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = data.map((t: any) => ({
+            id: t.id,
+            customerId: t.account_id,
+            customerName: `Customer ${t.account_id.slice(0, 8).toUpperCase()}`,
+            merchantName: t.merchant_id ? `Merchant ${t.merchant_id.slice(0, 8).toUpperCase()}` : "Global merchant",
+            merchantCategory: t.transaction_type.toUpperCase(),
+            amount: t.amount,
+            currency: t.currency,
+            riskScore: t.status === "declined" ? 95 : (t.status === "under_review" ? 68 : 12),
+            riskLevel: t.status === "declined" ? "critical" : (t.status === "under_review" ? "medium" : "safe"),
+            status: t.status === "declined" ? "declined" : (t.status === "under_review" ? "review" : "approved"),
+            agentVerdict: t.status === "declined" ? "BLOCK" : "ALLOW",
+            rulesFireCount: t.status === "declined" ? 3 : 1,
+            modelScore: t.status === "declined" ? 0.95 : 0.12,
+            deviceId: t.device_id || "DEV-MOCK",
+            country: "US",
+            timestamp: t.initiated_at
+          }));
+          setAllTxs(mapped.length > 0 ? mapped : MOCK_TRANSACTIONS);
+        } else {
+          setAllTxs(MOCK_TRANSACTIONS);
+        }
+      } catch (err) {
+        console.error("Failed to fetch transaction history:", err);
+        setAllTxs(MOCK_TRANSACTIONS);
+      }
+    }
+    loadHistory();
+  }, []);
 
   // Accept new transactions into the table (capped at 2000 total)
   const MAX_ROWS = 2000;
@@ -98,6 +135,7 @@ export default function Transactions() {
 
   useEffect(() => {
     const unsub = eventStream.on('new_transaction', (e: StreamEvent) => {
+
       const tx = e.payload as Transaction;
       setPendingRows(prev => [tx, ...prev].slice(0, 50));
       setNewCount(c => c + 1);
@@ -234,39 +272,68 @@ export default function Transactions() {
 
 // ── Transaction Detail Content ─────────────────────────────────────────────
 function TxDetail({ tx }: { tx: Transaction }) {
+  const [details, setDetails] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadDetails() {
+      try {
+        setLoading(true);
+        const res = await fetch(`http://localhost:8000/api/v1/transactions/${tx.id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setDetails(data);
+        }
+      } catch (err) {
+        console.error("Failed to load detailed transaction telemetry:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDetails();
+  }, [tx.id]);
+
+  if (loading) {
+    return <div style={{ padding: 20, color: 'var(--gray-500)', fontFamily: 'var(--font-mono)', fontSize: 12 }}>Loading telemetry ledger...</div>;
+  }
+
+  const activeTx = details?.transaction || tx;
+  const trust = details?.trust_score ?? tx.riskScore;
+  const explanation = details?.explanation ?? "No explanation generated.";
+
   const timelineEvents = [
-    { label: 'Transaction received', ts: tx.timestamp, status: 'done' },
-    { label: `${tx.rulesFireCount} rules evaluated`, ts: tx.timestamp, status: 'done' },
-    { label: `Model scored: ${(tx.modelScore * 100).toFixed(1)}%`, ts: tx.timestamp, status: 'done' },
-    { label: `Agent verdict: ${tx.agentVerdict}`, ts: tx.timestamp, status: tx.agentVerdict === 'BLOCK' ? 'error' : 'done' },
-    { label: `Final decision: ${tx.status.toUpperCase()}`, ts: tx.timestamp, status: tx.status === 'declined' || tx.status === 'flagged' ? 'error' : 'done' },
+    { label: 'Transaction received and validated', status: 'done' },
+    { label: `Policies checks resolved: ${details?.policy_status || 'PASS'}`, status: details?.policy_status === 'fail' ? 'error' : 'done' },
+    { label: `Agent consensus scored: ${((details?.consensus_score || 1.0) * 100).toFixed(0)}%`, status: 'done' },
+    { label: `Overall trust score resolved: ${trust} / 100`, status: trust < 60 ? 'error' : 'done' },
+    { label: `Verdict output: ${activeTx.status.toUpperCase()}`, status: activeTx.status === 'declined' ? 'error' : 'done' }
   ];
 
   const fields: [string, string][] = [
-    ['Transaction ID', tx.id],
-    ['Customer ID', tx.customerId],
-    ['Device ID', tx.deviceId],
-    ['Amount', `${tx.currency} ${tx.amount.toFixed(2)}`],
-    ['Merchant', tx.merchantName],
-    ['Category', tx.merchantCategory],
-    ['Country', tx.country],
-    ['Risk Score', `${tx.riskScore} / 100`],
-    ['Model Score', `${(tx.modelScore * 100).toFixed(3)}%`],
-    ['Rules Fired', String(tx.rulesFireCount)],
-    ['Timestamp', new Date(tx.timestamp).toLocaleString()],
+    ['Transaction ID', activeTx.id],
+    ['Customer Account', activeTx.account_id],
+    ['Device ID', activeTx.device_id || 'unknown'],
+    ['Merchant ID', activeTx.merchant_id || 'direct transfer'],
+    ['Amount', `${activeTx.currency} ${Number(activeTx.amount).toLocaleString()}`],
+    ['Category', activeTx.transaction_type],
+    ['Risk Score', `${100 - trust} / 100`],
+    ['Trust Level', `${trust} / 100`],
+    ['Status', activeTx.status.toUpperCase()],
+    ['Reference Number', activeTx.reference_number || 'none'],
+    ['Timestamp', new Date(activeTx.initiated_at || activeTx.timestamp).toLocaleString()]
   ];
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
       {/* Status + Risk */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-        <RiskBadge level={tx.riskLevel} score={tx.riskScore} />
+        <RiskBadge level={trust < 50 ? 'critical' : (trust < 75 ? 'medium' : 'safe')} score={100 - trust} />
         <span style={{
           fontSize: 'var(--text-11)', fontFamily: 'var(--font-mono)', fontWeight: 700,
-          color: STATUS_COLORS[tx.status], textTransform: 'uppercase',
+          color: STATUS_COLORS[activeTx.status] || STATUS_COLORS['approved'], textTransform: 'uppercase',
           letterSpacing: '0.04em', padding: '2px 7px', borderRadius: 9999,
           background: 'var(--surface-3)', border: '1px solid var(--border-2)',
-        }}>{tx.status}</span>
+        }}>{activeTx.status}</span>
       </div>
 
       {/* Fields grid */}
@@ -279,6 +346,18 @@ function TxDetail({ tx }: { tx: Transaction }) {
               <div style={{ fontSize: 'var(--text-12)', color: 'var(--gray-200)', fontFamily: 'var(--font-mono)', wordBreak: 'break-all' }}>{value}</div>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Explainability section */}
+      <div>
+        <div className="text-label" style={{ marginBottom: 8 }}>Explainability Audit Details</div>
+        <div style={{
+          padding: 10, borderRadius: 'var(--radius-md)', background: 'var(--surface-2)',
+          border: '1px solid var(--border-1)', fontSize: 'var(--text-12)',
+          fontFamily: 'var(--font-mono)', color: 'var(--gray-300)', lineHeight: 1.4
+        }}>
+          {explanation}
         </div>
       </div>
 
@@ -309,3 +388,4 @@ function TxDetail({ tx }: { tx: Transaction }) {
     </div>
   );
 }
+

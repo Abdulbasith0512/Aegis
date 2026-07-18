@@ -80,6 +80,51 @@ AegisAI/
 
 ---
 
+## Production Pipeline & ML Engine
+
+AegisAI now has a fully integrated production-grade transaction governance pipeline:
+
+1. **Transaction Interception (`POST /api/v1/transactions/intercept`)**:
+   - Ingests telemetry including device fingerprints, location coords, beneficiary records, and metadata.
+   - Runs validation using Pydantic schemas.
+   - Coordinates dynamic execution across all sub-agents via the compiled LangGraph execution graph.
+   - Saves all predictions, consensus votes, policies metrics, trust score calculations, human review queues, and explanations in the PostgreSQL relational tier.
+
+2. **Concrete Machine Learning Integration (`ml/models.py`)**:
+   - **Fraud Agent**: Leverages Scikit-Learn `RandomForestClassifier` and `GradientBoostingClassifier` trained dynamically at startup on synthetic parameters.
+   - **Behavior Agent**: Leverages scikit-learn `IsolationForest` to analyze data drifts.
+   - **AML Agent**: Reconstructs active transfer networks using `NetworkX` graph nodes, identifying structuring thresholds and cycle/smurfing routing loops.
+   - **KYC Agent**: Assesses identity verification logs.
+
+3. **Semantic Vector Storage**:
+   - Implements semantic indices inside **Qdrant** with unit-normalized deterministic text hash embeddings.
+   - Backed by an in-memory document store fallback layer to ensure runtime isolation if the Qdrant server is offline.
+
+---
+
+## AI Research Lab & Governance Intelligence
+
+The **AI Research Lab** allows researchers and administrators to simulate, benchmark, and review model performance:
+
+- **Governance Score Engine**: Computes a dynamic rating (0-100) and maps a grade (A-F) based on trust compliance, agent health, security score, recovery score, and reviews frequency.
+- **Agent Reputation Engine**: Computes a dynamic performance-based reputation leaderboard rank for all AI agents.
+- **Governance Maturity Index**: Audits the maturity level (Initial, Managed, Defined, Quantitatively Managed, Optimized) across 9 strategic dimensions.
+- **AI Failure Index**: Tracks metrics of system anomalies, model drifts, consensus errors, and logs root cause diagnoses.
+- **Dynamic Consensus V2**: Upgrades voting by weighting decisions based on active reputations and confidence matrices.
+- **APIs**:
+  - `POST /api/v1/research/experiment` / `GET /api/v1/research/experiments`: CRUD for scenarios.
+  - `POST /api/v1/research/run` / `GET /api/v1/research/results`: Triggers and gets simulation outcomes.
+  - `GET /api/v1/research/governance-score`: Overall score.
+  - `GET /api/v1/research/reputation`: Rankings leaderboard.
+  - `GET /api/v1/research/maturity`: Maturity assessment.
+  - `GET /api/v1/research/failure-index`: Failure index analysis.
+  - `GET /api/v1/research/benchmarks` / `POST /api/v1/research/compare`: Comparative performance matrix calculations.
+  - `GET /api/v1/research/download/csv`: Export statistics report.
+
+---
+
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+

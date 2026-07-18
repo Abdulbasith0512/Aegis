@@ -150,3 +150,15 @@ class ObservabilityService:
         Compiles raw lines formatted for Prometheus.
         """
         return generate_latest(), CONTENT_TYPE_LATEST
+
+def record_transaction_metrics(
+    latency_ms: float,
+    trust_score: float,
+    verdict: str,
+    consensus_score: float
+) -> None:
+    obs = ObservabilityService()
+    obs.trust_score_gauge.set(trust_score)
+    if verdict == "declined":
+        obs.record_policy_violation()
+
