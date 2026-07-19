@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { ToastBar } from "@/components/ui/ToastBar";
+import { Loader2 } from "lucide-react";
 
 // Pre-seeded realistic simulation history to display when backend isn't actively running
 const SIMULATED_HISTORY = [
@@ -19,6 +21,32 @@ const SIMULATED_HISTORY = [
 
 export default function TrustDashboard() {
   const [selectedPoint, setSelectedPoint] = useState<typeof SIMULATED_HISTORY[0] | null>(null);
+  const [alertThreshold, setAlertThreshold] = useState(75);
+  const [showConfig, setShowConfig] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+  const [toasts, setToasts] = useState<any[]>([]);
+
+  const handleRunVerification = () => {
+    setVerifying(true);
+    const toastId = Math.random().toString();
+    setToasts(prev => [...prev, {
+      id: toastId,
+      type: "info",
+      message: "Running Trust Engine Verification Suite... Testing policy compliance & drift latency."
+    }]);
+
+    setTimeout(() => {
+      setVerifying(false);
+      setToasts(prev => [
+        ...prev.filter(x => x.id !== toastId),
+        {
+          id: Math.random().toString(),
+          type: "success",
+          message: "Verification completed successfully. 0 policy violations detected across 1,080,667 calculations."
+        }
+      ]);
+    }, 1500);
+  };
 
   // SVG Chart calculation parameters
   const chartHeight = 220;
@@ -47,6 +75,8 @@ export default function TrustDashboard() {
 
   return (
     <div className="min-h-screen bg-[#0d0f14] text-[#e2e8f0] font-sans antialiased selection:bg-cyan-500 selection:text-white p-6 md:p-12">
+      <ToastBar toasts={toasts} onDismiss={(id) => setToasts(t => t.filter(x => x.id !== id))} />
+
       {/* Header Panel */}
       <header className="mb-10 flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-slate-800 pb-8">
         <div>
@@ -62,14 +92,43 @@ export default function TrustDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <button className="px-4 py-2 text-xs font-semibold rounded bg-[#1e2330] hover:bg-slate-800 border border-slate-800 text-slate-300 transition-all duration-300">
-            Configure SLA
+          <button 
+            onClick={() => setShowConfig(!showConfig)}
+            className="px-4 py-2 text-xs font-semibold rounded bg-[#1e2330] hover:bg-slate-800 border border-slate-800 text-slate-300 transition-all duration-300"
+          >
+            {showConfig ? "Close SLA Panel" : "Configure SLA"}
           </button>
-          <button className="px-4 py-2 text-xs font-semibold rounded bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-white font-mono shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all duration-300">
-            Run Verification Suite
+          <button 
+            onClick={handleRunVerification}
+            disabled={verifying}
+            className="px-4 py-2 text-xs font-semibold rounded bg-gradient-to-r from-cyan-500 to-blue-500 hover:opacity-90 text-white font-mono shadow-[0_0_15px_rgba(6,182,212,0.3)] transition-all duration-300 flex items-center gap-2"
+          >
+            {verifying && <Loader2 size={12} className="animate-spin" />}
+            {verifying ? "Running Suite..." : "Run Verification Suite"}
           </button>
         </div>
       </header>
+
+      {/* SLA Configuration Controls */}
+      {showConfig && (
+        <div className="mb-8 p-6 rounded-xl border border-slate-800 bg-[#121620]/80 backdrop-blur-md transition-all duration-300">
+          <h3 className="text-sm font-bold text-white mb-2">Configure SLA alert threshold</h3>
+          <p className="text-xs text-slate-400 mb-4">Set the threshold below which transactions trigger Human-In-The-Loop (HITL) audits.</p>
+          <div className="flex items-center gap-6">
+            <input 
+              type="range" 
+              min="50" 
+              max="95" 
+              value={alertThreshold} 
+              onChange={(e) => setAlertThreshold(parseInt(e.target.value))}
+              className="w-full h-1 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-400"
+            />
+            <span className="text-lg font-mono font-black text-cyan-400 min-w-[3rem] text-right">
+              {alertThreshold}%
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Metrics Summary Cards */}
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
@@ -100,10 +159,10 @@ export default function TrustDashboard() {
           <div className="absolute top-0 right-0 h-24 w-24 translate-x-8 -translate-y-8 rounded-full bg-amber-500/10 blur-xl group-hover:bg-amber-500/20 transition-all duration-300"></div>
           <p className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-1">Alert Thresholds</p>
           <h3 className="text-3xl font-extrabold text-white font-mono flex items-baseline gap-1">
-            75 <span className="text-sm font-sans text-amber-500 font-semibold">(HITL Trigger)</span>
+            {alertThreshold} <span className="text-sm font-sans text-amber-500 font-semibold">(HITL Trigger)</span>
           </h3>
           <p className="text-xs text-amber-500 mt-2 flex items-center gap-1 font-mono">
-            Score &lt; 75 delegates to audit
+            Score &lt; {alertThreshold} delegates to audit
           </p>
         </div>
 
@@ -138,16 +197,16 @@ export default function TrustDashboard() {
             >
               {/* Grids / Guidelines */}
               <line x1={paddingX} y1={getY(100)} x2={chartWidth - paddingX} y2={getY(100)} stroke="#1e293b" strokeDasharray="3,3" />
-              <line x1={paddingX} y1={getY(75)} x2={chartWidth - paddingX} y2={getY(75)} stroke="#334155" strokeDasharray="5,5" />
+              <line x1={paddingX} y1={getY(alertThreshold)} x2={chartWidth - paddingX} y2={getY(alertThreshold)} stroke="#e0a96d" strokeDasharray="5,5" />
               <line x1={paddingX} y1={getY(50)} x2={chartWidth - paddingX} y2={getY(50)} stroke="#1e293b" strokeDasharray="3,3" />
               <line x1={paddingX} y1={getY(0)} x2={chartWidth - paddingX} y2={getY(0)} stroke="#1e293b" strokeDasharray="3,3" />
 
-              {/* Limit alert zone highlight (Score < 75) */}
+              {/* Limit alert zone highlight (Score < alertThreshold) */}
               <rect
                 x={paddingX}
-                y={getY(75)}
+                y={getY(alertThreshold)}
                 width={chartWidth - paddingX * 2}
-                height={getY(0) - getY(75)}
+                height={getY(0) - getY(alertThreshold)}
                 fill="rgba(245,158,11,0.02)"
               />
 
@@ -175,7 +234,7 @@ export default function TrustDashboard() {
                 
                 let dotColor = "#06b6d4"; // Cyan
                 if (pt.score < 50) dotColor = "#f43f5e"; // Rose
-                else if (pt.score < 75) dotColor = "#f59e0b"; // Amber
+                else if (pt.score < alertThreshold) dotColor = "#f59e0b"; // Amber
 
                 return (
                   <g key={pt.id} className="cursor-pointer" onClick={() => setSelectedPoint(pt)}>
@@ -222,8 +281,8 @@ export default function TrustDashboard() {
                   {pt.date}
                 </text>
               ))}
-              <text x={paddingX - 10} y={getY(75) + 3} fill="#f59e0b" fontSize="9" textAnchor="end" className="font-mono font-bold">
-                75
+              <text x={paddingX - 10} y={getY(alertThreshold) + 3} fill="#f59e0b" fontSize="9" textAnchor="end" className="font-mono font-bold">
+                {alertThreshold}
               </text>
               <text x={paddingX - 10} y={getY(50) + 3} fill="#64748b" fontSize="9" textAnchor="end" className="font-mono">
                 50
