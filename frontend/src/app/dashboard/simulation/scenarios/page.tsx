@@ -84,7 +84,7 @@ export default function ScenarioBuilder() {
         {/* Basic Info */}
         <Section title="Basic Information" icon={<Settings />}>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-            <Input label="Scenario Name" value={formData.name} onChange={(v) => setFormData({...formData, name: v})} />
+            <Input label="Scenario Name" value={formData.name} onChange={(v: any) => setFormData({...formData, name: v})} />
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>Simulation Type</label>
               <select 
@@ -98,7 +98,7 @@ export default function ScenarioBuilder() {
               </select>
             </div>
             <div style={{ gridColumn: "1 / -1" }}>
-              <Input label="Description" value={formData.description} onChange={(v) => setFormData({...formData, description: v})} />
+              <Input label="Description" value={formData.description} onChange={(v: any) => setFormData({...formData, description: v})} />
             </div>
           </div>
         </Section>
@@ -106,8 +106,8 @@ export default function ScenarioBuilder() {
         {/* Load & Data Generation */}
         <Section title="Traffic & Load Profile" icon={<Database />}>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-            <Input label="Transactions to Generate" type="number" value={formData.num_transactions} onChange={(v) => setFormData({...formData, num_transactions: Number(v)})} />
-            <Input label="Target TPS (Load)" type="number" value={formData.target_tps} onChange={(v) => setFormData({...formData, target_tps: Number(v)})} />
+            <Input label="Transactions to Generate" type="number" value={formData.num_transactions} onChange={(v: any) => setFormData({...formData, num_transactions: Number(v)})} />
+            <Input label="Target TPS (Load)" type="number" value={formData.target_tps} onChange={(v: any) => setFormData({...formData, target_tps: Number(v)})} />
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               <label style={{ fontSize: 13, fontWeight: 600, color: "var(--text-1)" }}>AML Background Risk</label>
               <select 

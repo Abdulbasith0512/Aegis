@@ -363,7 +363,7 @@ export default function ResearchDashboard() {
       {activeTab === "reputation" && (
         <div style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)", borderRadius: 12, padding: 20 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)", marginBottom: 16 }}>Agent Reputation Index Leaderboard</h2>
-          <table style={{ width: "100%", borderCollapse: "collapse", textLeft: "left" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border-1)", color: "var(--text-2)", fontSize: 12 }}>
                 <th style={{ padding: 12 }}>Rank</th>
@@ -397,7 +397,7 @@ export default function ResearchDashboard() {
         <div style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)", borderRadius: 12, padding: 20 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)", marginBottom: 16 }}>Algorithm Benchmark Metrics Matrix</h2>
           <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", textLeft: "left" }}>
+            <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border-1)", color: "var(--text-2)", fontSize: 12 }}>
                   <th style={{ padding: 12 }}>Algorithm</th>

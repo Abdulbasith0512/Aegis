@@ -196,14 +196,14 @@ export default function IntelligenceDashboard() {
             <div style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)", borderRadius: 12, padding: 20, display: "flex", flexDirection: "column", gap: 16 }}>
               <h3 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-1)" }}>Governance Incidents Log</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                <div style={{ display: "flex", justifyBetween: "space-between", fontSize: 13, background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <ShieldAlert size={16} style={{ color: "var(--risk-critical)" }} />
                     <span style={{ color: "var(--text-1)" }}>AML Parameter Drift Event</span>
                   </div>
                   <span style={{ color: "var(--text-2)" }}>Resolved via rollback</span>
                 </div>
-                <div style={{ display: "flex", justifyBetween: "space-between", fontSize: 13, background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 13, background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
                   <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                     <CheckCircle2 size={16} style={{ color: "var(--success)" }} />
                     <span style={{ color: "var(--text-1)" }}>Active models checks loaded</span>
@@ -270,7 +270,7 @@ export default function IntelligenceDashboard() {
       {activeTab === "reputation" && (
         <div style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)", borderRadius: 12, padding: 20 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)", marginBottom: 16 }}>Active Agent Reputation Leaderboard</h2>
-          <table style={{ width: "100%", borderCollapse: "collapse", textLeft: "left" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border-1)", color: "var(--text-2)", fontSize: 12 }}>
                 <th style={{ padding: 12 }}>Rank</th>
@@ -305,7 +305,7 @@ export default function IntelligenceDashboard() {
       {activeTab === "benchmarks" && (
         <div style={{ background: "var(--surface-2)", border: "1px solid var(--border-1)", borderRadius: 12, padding: 20 }}>
           <h2 style={{ fontSize: 18, fontWeight: 700, color: "var(--text-1)", marginBottom: 16 }}>Algorithm Benchmark Metrics Comparison</h2>
-          <table style={{ width: "100%", borderCollapse: "collapse", textLeft: "left" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", textAlign: "left" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border-1)", color: "var(--text-2)", fontSize: 12 }}>
                 <th style={{ padding: 12 }}>Algorithm</th>
@@ -386,7 +386,7 @@ export default function IntelligenceDashboard() {
                 <div style={{ fontSize: 13, color: "var(--text-2)" }}>No custom reports generated in this workspace session. Trigger above.</div>
               ) : (
                 reports.map((r, idx) => (
-                  <div key={idx} style={{ display: "flex", justifyBetween: "space-between", alignItems: "center", background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
+                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", background: "var(--surface-3)", padding: 12, borderRadius: 8 }}>
                     <div>
                       <span style={{ fontSize: 14, fontWeight: 700, color: "var(--text-1)", textTransform: "capitalize" }}>{r.report_type} Report</span>
                       <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 4 }}>Format: {r.report_format.toUpperCase()} | Timestamp: {new Date(r.created_at).toLocaleString()}</div>

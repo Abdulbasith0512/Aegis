@@ -330,7 +330,7 @@ function TxDetail({ tx }: { tx: Transaction }) {
         <RiskBadge level={trust < 50 ? 'critical' : (trust < 75 ? 'medium' : 'safe')} score={100 - trust} />
         <span style={{
           fontSize: 'var(--text-11)', fontFamily: 'var(--font-mono)', fontWeight: 700,
-          color: STATUS_COLORS[activeTx.status] || STATUS_COLORS['approved'], textTransform: 'uppercase',
+          color: STATUS_COLORS[activeTx.status as TxStatus] || STATUS_COLORS['approved'], textTransform: 'uppercase',
           letterSpacing: '0.04em', padding: '2px 7px', borderRadius: 9999,
           background: 'var(--surface-3)', border: '1px solid var(--border-2)',
         }}>{activeTx.status}</span>
