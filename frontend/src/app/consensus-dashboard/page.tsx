@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 // Pre-seeded consensus configurations to display when backend isn't actively running
 const SIMULATED_REPUTATIONS = [
@@ -43,12 +43,91 @@ const SIMULATED_CONSENSUS_HISTORY = [
   }
 ];
 
+function getAgentDisplayName(key: string): string {
+  const mapping: Record<string, string> = {
+    "compliance-agent": "Compliance Agent",
+    "fraud-agent": "Fraud Agent",
+    "aml-agent": "AML Agent",
+    "kyc-agent": "KYC Agent",
+    "device-agent": "Device Agent",
+    "behavior-agent": "Behavior Agent",
+    "explainability-agent": "Explainability Agent"
+  };
+  return mapping[key.toLowerCase()] || key;
+}
+
+function getAgentColor(name: string): string {
+  const lower = name.toLowerCase();
+  if (lower.includes("compliance")) return "from-emerald-500 to-teal-400";
+  if (lower.includes("fraud")) return "from-cyan-500 to-blue-400";
+  if (lower.includes("aml")) return "from-indigo-500 to-purple-400";
+  if (lower.includes("kyc")) return "from-violet-500 to-fuchsia-400";
+  if (lower.includes("device")) return "from-pink-500 to-rose-400";
+  if (lower.includes("behavior")) return "from-amber-500 to-orange-400";
+  return "from-yellow-500 to-lime-400";
+}
+
 export default function ConsensusDashboard() {
-  const [reputations] = useState(SIMULATED_REPUTATIONS);
-  const [history] = useState(SIMULATED_CONSENSUS_HISTORY);
-  
-  // Custom states for showing an audit trace detail panel
-  const [selectedAudit, setSelectedAudit] = useState<typeof SIMULATED_CONSENSUS_HISTORY[0] | null>(null);
+  const [reputations, setReputations] = useState<any[]>(SIMULATED_REPUTATIONS);
+  const [history, setHistory] = useState<any[]>([]);
+  const [selectedAudit, setSelectedAudit] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadConsensusData() {
+      try {
+        const res = await fetch("http://localhost:8000/api/v1/consensus/history");
+        if (res.ok) {
+          const data = await res.json();
+          const mappedHistory = data.map((item: any) => {
+            const disagreed = item.vote_details?.disagreed_agents || [];
+            return {
+              id: item.id,
+              tx_ref: `TX-${item.transaction_id.slice(0, 5).toUpperCase()}`,
+              verdict: item.decision_verdict,
+              score: item.consensus_score,
+              override: item.vote_details?.compliance_override_triggered || false,
+              disagreed: disagreed.map(getAgentDisplayName),
+              date: new Date(item.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+            };
+          });
+          setHistory(mappedHistory);
+          
+          if (mappedHistory.length > 0) {
+            setSelectedAudit(mappedHistory[0]);
+          } else {
+            setSelectedAudit(null);
+          }
+
+          if (data.length > 0) {
+            const latest = data[0];
+            const reps = latest.vote_details?.reputations || {};
+            const weights = latest.vote_details?.normalized_weights || {};
+            const mappedReps = Object.keys(reps).map(key => {
+              const displayName = getAgentDisplayName(key);
+              return {
+                agent: displayName,
+                rep: reps[key],
+                weight: weights[key] || 0.05,
+                color: getAgentColor(displayName)
+              };
+            });
+            mappedReps.sort((a, b) => b.weight - a.weight);
+            setReputations(mappedReps);
+          }
+        } else {
+          throw new Error("API error");
+        }
+      } catch {
+        setHistory(SIMULATED_CONSENSUS_HISTORY);
+        setSelectedAudit(SIMULATED_CONSENSUS_HISTORY[0]);
+        setReputations(SIMULATED_REPUTATIONS);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadConsensusData();
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0d0f14] text-[#e2e8f0] font-sans antialiased p-6 md:p-12 selection:bg-violet-500 selection:text-white">
@@ -124,7 +203,9 @@ export default function ConsensusDashboard() {
                     <tr
                       key={h.id}
                       onClick={() => setSelectedAudit(h)}
-                      className="hover:bg-slate-900/40 cursor-pointer transition-colors duration-200"
+                      className={`hover:bg-slate-900/40 cursor-pointer transition-colors duration-200 ${
+                        selectedAudit?.id === h.id ? "bg-slate-900/50" : ""
+                      }`}
                     >
                       <td className="py-4 font-bold text-white">{h.tx_ref}</td>
                       <td className="py-4">
@@ -178,7 +259,7 @@ export default function ConsensusDashboard() {
                   <span className="text-xs text-slate-400 font-mono block mb-2">Disagreement Analysis</span>
                   {selectedAudit.disagreed.length > 0 ? (
                     <div className="flex flex-wrap gap-2">
-                      {selectedAudit.disagreed.map((agent) => (
+                      {selectedAudit.disagreed.map((agent: string) => (
                         <span key={agent} className="inline-flex px-2 py-0.5 rounded text-[10px] font-mono bg-rose-500/10 text-rose-400 border border-rose-500/20">
                           {agent} Diverged
                         </span>
