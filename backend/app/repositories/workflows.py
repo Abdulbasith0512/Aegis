@@ -1,6 +1,6 @@
 import uuid
 from typing import List, Optional, Dict, Any
-from sqlalchemy import select, desc
+from sqlalchemy import select, desc, func
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -43,8 +43,37 @@ class WorkflowRepository:
         return result.scalars().first()
 
     async def get_workflows(self, skip: int = 0, limit: int = 100, is_template: Optional[bool] = None) -> List[Workflow]:
+        # Check if total count is 0
+        count_stmt = select(func.count()).select_from(Workflow)
+        count_result = await self.db.execute(count_stmt)
+        count = count_result.scalar() or 0
+        
+        if count == 0:
+            # Seed default templates
+            default_templates = [
+                Workflow(
+                    name="Standard Transaction Evaluation",
+                    description="Out-of-the-box transaction evaluation combining Fraud RF, behavioral checks, and regulatory policy limits.",
+                    is_template=True,
+                    status="published"
+                ),
+                Workflow(
+                    name="KYC Onboarding Verification",
+                    description="Standard KYC workflow validating user registry status, blacklist verification, and document match checks.",
+                    is_template=True,
+                    status="draft"
+                )
+            ]
+            for template in default_templates:
+                self.db.add(template)
+            await self.db.commit()
+            
+            for template in default_templates:
+                await self.create_workflow_version(template.id, version_number=1)
+
         stmt = select(Workflow).options(
-            selectinload(Workflow.versions)
+            selectinload(Workflow.versions).selectinload(WorkflowVersion.nodes),
+            selectinload(Workflow.versions).selectinload(WorkflowVersion.edges)
         ).order_by(desc(Workflow.created_at)).offset(skip).limit(limit)
         
         if is_template is not None:
