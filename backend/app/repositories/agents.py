@@ -30,7 +30,52 @@ class AgentMLOpsRepository:
                     status="active"
                 )
                 self.db.add(agent)
-        await self.db.commit()
+                await self.db.commit()
+                await self.db.refresh(agent)
+
+            # Check if this agent has any versions. If not, seed default v1.0.0 and v1.1.0 checkpoints.
+            v_result = await self.db.execute(select(ModelVersion).where(ModelVersion.agent_id == agent.id))
+            version = v_result.scalars().first()
+            if not version:
+                v1 = ModelVersion(
+                    agent_id=agent.id,
+                    version_string="v1.0.0",
+                    parameters_hash="sha256_default_v1_0_0",
+                    accuracy_benchmark=0.945,
+                    is_active=True,
+                    hyperparameters={"lr": 0.001, "batch_size": 32},
+                    metrics={"accuracy": 0.945, "precision": 0.95, "recall": 0.94}
+                )
+                v2 = ModelVersion(
+                    agent_id=agent.id,
+                    version_string="v1.1.0",
+                    parameters_hash="sha256_default_v1_1_0",
+                    accuracy_benchmark=0.962,
+                    is_active=True,
+                    hyperparameters={"lr": 0.0008, "batch_size": 64},
+                    metrics={"accuracy": 0.962, "precision": 0.97, "recall": 0.95}
+                )
+                self.db.add(v1)
+                self.db.add(v2)
+                await self.db.commit()
+                await self.db.refresh(v1)
+                await self.db.refresh(v2)
+
+                # Set v1.1.0 as active in MLOpsDeployment config
+                dep_result = await self.db.execute(select(MLOpsDeployment).where(MLOpsDeployment.agent_id == agent.id))
+                config = dep_result.scalars().first()
+                if not config:
+                    config = MLOpsDeployment(
+                        agent_id=agent.id,
+                        deployment_type="production",
+                        active_version_id=v2.id,
+                        canary_split=100,
+                        ab_split=50
+                    )
+                    self.db.add(config)
+                else:
+                    config.active_version_id = v2.id
+                await self.db.commit()
 
     async def list_agents(self) -> List[AIAgent]:
         """
