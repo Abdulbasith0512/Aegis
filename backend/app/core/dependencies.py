@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime, timezone
-from typing import AsyncGenerator, Callable, List
+from typing import AsyncGenerator, Callable, List, Optional
 from fastapi import Depends
 from fastapi.security import OAuth2PasswordBearer
 from redis.asyncio import Redis

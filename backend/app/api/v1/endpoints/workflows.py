@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.database import get_db
+from app.core.dependencies import get_db
 from app.repositories.workflows import WorkflowRepository
 from app.services.workflow_engine import WorkflowExecutionEngine
 from app.schemas.workflows import (

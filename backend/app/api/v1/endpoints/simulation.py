@@ -4,7 +4,7 @@ from typing import List, Dict, Any
 from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.database import get_db
+from app.core.dependencies import get_db
 from app.repositories.simulation import SimulationRepository
 from app.services.simulation_engine import SimulationEngine
 from app.schemas.simulation import (

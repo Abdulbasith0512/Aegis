@@ -146,7 +146,7 @@ class TransactionRepository:
                 id=uuid.uuid4(),
                 agent_id=agent.id,
                 version_string="v1.0.0",
-                parameters_hash=hashlib := uuid.uuid4().hex,
+                parameters_hash=uuid.uuid4().hex,
                 accuracy_benchmark=0.96,
                 is_active=True,
                 hyperparameters={},
