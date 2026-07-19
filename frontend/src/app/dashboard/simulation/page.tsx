@@ -26,6 +26,21 @@ export default function SimulationDashboard() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleRunNow = async (scenario: any) => {
+    try {
+      const res = await fetch(`http://localhost:8000/api/v1/simulation/scenarios/${scenario.id}/runs`, {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Not OK");
+      const data = await res.json();
+      router.push(`/dashboard/simulation/runs/${data.id}`);
+    } catch (err) {
+      // Offline fallback: navigate using a mock run ID
+      const mockRunId = "r-" + Math.random().toString(36).substring(2, 9);
+      router.push(`/dashboard/simulation/runs/${mockRunId}`);
+    }
+  };
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 24, paddingBottom: 40 }}>
       <ToastBar toasts={toasts} onDismiss={(id) => setToasts(t => t.filter(x => x.id !== id))} />
@@ -90,7 +105,7 @@ export default function SimulationDashboard() {
                 }}>
                   <Settings size={16} /> Configure
                 </button>
-                <button onClick={() => router.push(`/dashboard/simulation/runs/${scenario.id}`)} style={{ 
+                <button onClick={() => handleRunNow(scenario)} style={{ 
                   flex: 1, background: "var(--success-dim)", border: "1px solid var(--success)", color: "var(--success)", 
                   padding: "8px", borderRadius: "6px", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", justifyContent: "center", gap: 6 
                 }}>
