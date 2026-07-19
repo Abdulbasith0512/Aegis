@@ -118,13 +118,20 @@ class IntelligenceService:
                 w_diff = history[0].score - history[6].score
                 weekly_trend = "improving" if w_diff > 0.5 else ("declining" if w_diff < -0.5 else "stable")
 
+        # Determine risk category dynamically
+        risk_category = "low"
+        if latest.overall_score < 70.0:
+            risk_category = "high"
+        elif latest.overall_score < 85.0:
+            risk_category = "medium"
+
         return {
             "overall_score": latest.overall_score,
             "grade": latest.grade,
             "historical_trend": historical_trend,
             "weekly_trend": weekly_trend,
             "monthly_trend": monthly_trend,
-            "risk_category": latest.risk_category,
+            "risk_category": risk_category,
             "breakdown": {
                 "trust_score": latest.trust_score,
                 "policy_compliance": latest.policy_compliance,
