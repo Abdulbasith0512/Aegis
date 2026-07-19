@@ -10,6 +10,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { Play, Square, AlertTriangle, CheckCircle2, Clock, Zap, RefreshCw } from 'lucide-react';
 import { RiskBadge, ChartContainer, SharedTooltip, CHART_COLORS, AXIS_PROPS, GRID_PROPS } from '@/components/ui';
+import { ToastBar } from '@/components/ui/ToastBar';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import type { RiskLevel } from '@/lib/mockData';
 
@@ -123,23 +124,45 @@ export default function ChaosEngineering() {
   const [nodes, setNodes, onNodesChange] = useNodesState(DEP_NODES);
   const [edges, setEdges, onEdgesChange] = useEdgesState(DEP_EDGES);
   const [runningId, setRunningId] = useState<string | null>('exp-4');
+  const [toasts, setToasts] = useState<any[]>([]);
 
   const runExperiment = (id: string) => {
+    const exp = experiments.find(e => e.id === id);
+    if (!exp) return;
+
     setRunningId(id);
     setExperiments(prev =>
       prev.map(e => e.id === id ? { ...e, status: 'running' } : e)
     );
+
+    // Toast feedback
+    const toastId = Math.random().toString();
+    setToasts(prev => [...prev, {
+      id: toastId,
+      type: "info",
+      message: `Injected fault: "${exp.name}". Check dependency map for live node failures...`
+    }]);
+
     setTimeout(() => {
       setRunningId(null);
+      const recoveryTime = Math.round(2000 + Math.random() * 8000);
+      const trustDrop = Math.round(5 + Math.random() * 30);
+      
       setExperiments(prev =>
         prev.map(e => e.id === id ? {
           ...e,
           status: 'completed',
-          recoveryTimeMs: Math.round(2000 + Math.random() * 8000),
-          trustDrop: Math.round(5 + Math.random() * 30),
+          recoveryTimeMs: recoveryTime,
+          trustDrop: trustDrop,
           lastRunAt: new Date().toISOString(),
         } : e)
       );
+
+      setToasts(prev => [...prev, {
+        id: Math.random().toString(),
+        type: "success",
+        message: `Self-Healing completed! Bypassed/recovered "${exp.name}" in ${(recoveryTime / 1000).toFixed(1)}s.`
+      }]);
     }, 4000);
   };
 
@@ -148,6 +171,11 @@ export default function ChaosEngineering() {
     setExperiments(prev =>
       prev.map(e => e.id === id ? { ...e, status: 'idle' } : e)
     );
+    setToasts(prev => [...prev, {
+      id: Math.random().toString(),
+      type: "error",
+      message: "Chaos experiment manually stopped."
+    }]);
   };
 
   useEffect(() => {
@@ -205,12 +233,35 @@ export default function ChaosEngineering() {
 
   return (
     <div style={{ maxWidth: 1600 }}>
+      <ToastBar toasts={toasts} onDismiss={(id) => setToasts(t => t.filter(x => x.id !== id))} />
+
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ fontSize: 'var(--text-20)', fontWeight: 700, color: 'var(--gray-50)', lineHeight: 1 }}>Chaos Engineering</h1>
         <p style={{ fontSize: 'var(--text-13)', color: 'var(--gray-500)', marginTop: 4 }}>
           Fault injection experiments, dependency maps, and recovery analytics
         </p>
+      </div>
+
+      {/* Informational Guidance Banner */}
+      <div style={{
+        background: "rgba(59, 130, 246, 0.08)",
+        border: "1px solid rgba(59, 130, 246, 0.2)",
+        borderRadius: 12,
+        padding: "16px 20px",
+        marginBottom: 20,
+        display: "flex",
+        alignItems: "start",
+        gap: 16
+      }}>
+        <Zap size={20} style={{ color: "#3b82f6", marginTop: 2, flexShrink: 0 }} />
+        <div>
+          <h4 style={{ fontSize: 14, fontWeight: 700, color: "#93c5fd", marginBottom: 4 }}>How Chaos Engineering Works</h4>
+          <p style={{ fontSize: 13, color: "var(--gray-300)", lineHeight: 1.5 }}>
+            Use the <strong>Experiment Catalog</strong> to simulate live production faults. Clicking <strong>Run</strong> will inject that failure (e.g. killing the Fraud agent, slowing down DB queries) into the network. 
+            Watch the <strong>Service Dependency Map</strong> to see affected nodes turn amber (degraded) or red (failed) in real-time. After a brief duration, AegisAI's automated <strong>Self-Healing Engine</strong> will bypass or recover the service, restoring metrics to healthy states.
+          </p>
+        </div>
       </div>
 
       {/* Stats row */}
