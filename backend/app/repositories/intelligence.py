@@ -102,6 +102,7 @@ class IntelligenceRepository:
         return rep
 
     # --- Benchmarking ---
+    async def create_benchmark_run(self, parameters: Dict[str, Any]) -> BenchmarkRun:
         # 1. Ensure default project exists
         project_name = "Platform Benchmarks Project"
         res_p = await self.db.execute(select(ResearchProject).where(ResearchProject.name == project_name))

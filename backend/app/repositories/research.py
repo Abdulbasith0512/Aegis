@@ -97,6 +97,35 @@ class ResearchRepository:
         experiment_id: uuid.UUID,
         parameters: Dict[str, Any]
     ) -> ExperimentRun:
+        # Ensure default project exists
+        project_name = "Default Research Project"
+        res_p = await self.db.execute(select(ResearchProject).where(ResearchProject.name == project_name))
+        project = res_p.scalars().first()
+        if not project:
+            project = ResearchProject(
+                id=uuid.uuid4(),
+                name=project_name,
+                description="Auto-generated project for research runs"
+            )
+            self.db.add(project)
+            await self.db.commit()
+            await self.db.refresh(project)
+
+        # Ensure experiment exists
+        res_e = await self.db.execute(select(ResearchExperiment).where(ResearchExperiment.id == experiment_id))
+        experiment = res_e.scalars().first()
+        if not experiment:
+            experiment = ResearchExperiment(
+                id=experiment_id,
+                project_id=project.id,
+                name=f"Auto-generated Experiment ({experiment_id})",
+                description="Auto-generated experiment to track runs",
+                config_data={}
+            )
+            self.db.add(experiment)
+            await self.db.commit()
+            await self.db.refresh(experiment)
+
         run = ExperimentRun(
             id=uuid.uuid4(),
             experiment_id=experiment_id,
