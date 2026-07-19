@@ -165,7 +165,7 @@ class UserRepository:
         Creates and returns a default dev administrator profile for dev environments.
         """
         # Ensure 'admin' role exists
-        res = await self.db.execute(select(Role).where(Role.name == "admin"))
+        res = await self.db.execute(select(Role).where(Role.name == "admin").options(selectinload(Role.permissions)))
         role = res.scalars().first()
         if not role:
             role = Role(id=uuid.uuid4(), name="admin", description="Administrator Role")

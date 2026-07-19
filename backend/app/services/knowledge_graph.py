@@ -62,7 +62,10 @@ class KnowledgeGraphService:
         """
         
         with self.db.get_session() as session:
-            session.run(cypher)
+            for statement in cypher.split(";"):
+                stmt = statement.strip()
+                if stmt:
+                    session.run(stmt)
             
         return {"message": "Knowledge graph seeded inside active Neo4j database successfully."}
 
@@ -154,7 +157,7 @@ class KnowledgeGraphService:
 
         cypher = """
         MATCH (start:Account {id: $source}), (end:Account {id: $target})
-        MATCH p = shortestPath((start)-[*]-(end))
+        MATCH p = shortestPath((start)-[*]->(end))
         RETURN [n in nodes(p) | n.id] as path_nodes, [r in relationships(p) | type(r)] as rel_types
         """
         
@@ -184,20 +187,26 @@ class KnowledgeGraphService:
                 }
             }
 
-        # Cypher risk propagation down relationships (propagates 70% risk to targets)
+        # Cypher risk propagation down relationships (propagates 70% risk to targets per hop)
         cypher = """
-        MATCH (start {id: $node_id})-[:TRANSFERRED_TO]->(target:Account)
-        RETURN target.id as id, target.risk as risk
+        MATCH p = (start {id: $node_id})-[:OWNS|TRANSFERRED_TO*1..2]->(target:Account)
+        RETURN target.id as id, length(p) as path_length, start.risk as start_risk
         """
         with self.db.get_session() as session:
             res = session.run(cypher, {"node_id": start_node_id})
             data = res.data()
             risk_map = {}
+            base_risk = 85.0
             for row in data:
-                risk_map[row["id"]] = round((row["risk"] or 0) * 0.7, 2)
+                s_risk = row["start_risk"] or 0.0
+                if s_risk <= 1.0:
+                    s_risk = s_risk * 100
+                base_risk = s_risk
+                factor = 0.7 ** row["path_length"]
+                risk_map[row["id"]] = round(s_risk * factor, 2)
             return {
                 "start_node": start_node_id,
-                "base_risk": 85.0,
+                "base_risk": base_risk,
                 "propagated_risk_map": risk_map
             }
 

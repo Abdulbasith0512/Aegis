@@ -18,6 +18,7 @@ def test_knowledge_graph_service_mock_visuals() -> None:
     Verifies visualization structures output under mock/real scenarios.
     """
     service = KnowledgeGraphService()
+    service.seed_mock_knowledge_graph()
     res = service.get_graph_visualization()
     
     assert "nodes" in res
@@ -29,6 +30,7 @@ def test_knowledge_graph_shortest_path() -> None:
     Verifies that pathfinding returns valid hop sequences.
     """
     service = KnowledgeGraphService()
+    service.seed_mock_knowledge_graph()
     res = service.find_shortest_fraud_path("acc-101", "acc-103")
     
     assert res["path_found"] is True
@@ -39,6 +41,7 @@ def test_knowledge_graph_risk_propagation() -> None:
     Verifies that risk scores propagate.
     """
     service = KnowledgeGraphService()
+    service.seed_mock_knowledge_graph()
     res = service.propagate_risk_scores("cust-2")
     
     assert res["start_node"] == "cust-2"
