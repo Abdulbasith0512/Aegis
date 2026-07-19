@@ -5,6 +5,7 @@ from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 from app.models.agents import AIAgent, ModelVersion, MLOpsDeployment, MLflowRun, DeploymentHistory
+from app.models.research import ResearchProject, ResearchExperiment
 from app.schemas.mlops import ModelVersionCreate, DeploymentConfigUpdate, MLflowRunCreate
 
 class AgentMLOpsRepository:
@@ -160,14 +161,39 @@ class AgentMLOpsRepository:
         return list(result.scalars().all())
 
     # --- MLflow Runs ---
-    async def create_mlflow_run(self, schema: MLflowRunCreate) -> MLflowRun:
-        """
-        Creates an entry mimicking MLflow experiment runs.
-        """
+        # Ensure default project exists
+        project_name = "Default Agent Experiments"
+        res_p = await self.db.execute(select(ResearchProject).where(ResearchProject.name == project_name))
+        project = res_p.scalars().first()
+        if not project:
+            project = ResearchProject(
+                id=uuid.uuid4(),
+                name=project_name,
+                description="Auto-generated project for tracking agent MLflow training runs"
+            )
+            self.db.add(project)
+            await self.db.commit()
+            await self.db.refresh(project)
+
+        # Ensure experiment exists for this agent
+        res_e = await self.db.execute(select(ResearchExperiment).where(ResearchExperiment.id == schema.agent_id))
+        experiment = res_e.scalars().first()
+        if not experiment:
+            experiment = ResearchExperiment(
+                id=schema.agent_id,
+                project_id=project.id,
+                name=f"Agent Run Tracking ({schema.agent_id})",
+                description="Auto-generated experiment for tracking agent MLflow training runs",
+                config_data={}
+            )
+            self.db.add(experiment)
+            await self.db.commit()
+            await self.db.refresh(experiment)
+
         run = MLflowRun(
             agent_id=schema.agent_id,
             run_name=schema.run_name,
-            experiment_id=str(schema.agent_id),
+            experiment_id=schema.agent_id,
             parameters=schema.parameters,
             metrics=schema.metrics,
             status=schema.status

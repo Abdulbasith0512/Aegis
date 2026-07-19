@@ -110,7 +110,7 @@ export default function ResearchDashboard() {
       });
 
       let totalWeight = 0;
-      let approvalWeightedSum = 0;
+      let approval_weighted_sum = 0;
       const confidence_matrix: Record<string, any> = {};
       const weighted_votes = [];
 
@@ -138,7 +138,7 @@ export default function ResearchDashboard() {
           effective_weight: parseFloat(weight.toFixed(3))
         };
 
-        weighted_votes.append({
+        weighted_votes.push({
           agent_name: name,
           decision,
           weight: parseFloat(weight.toFixed(3))
