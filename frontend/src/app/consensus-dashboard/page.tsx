@@ -91,29 +91,31 @@ export default function ConsensusDashboard() {
               date: new Date(item.created_at).toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
             };
           });
-          setHistory(mappedHistory);
-          
           if (mappedHistory.length > 0) {
+            setHistory(mappedHistory);
             setSelectedAudit(mappedHistory[0]);
-          } else {
-            setSelectedAudit(null);
-          }
 
-          if (data.length > 0) {
-            const latest = data[0];
-            const reps = latest.vote_details?.reputations || {};
-            const weights = latest.vote_details?.normalized_weights || {};
-            const mappedReps = Object.keys(reps).map(key => {
-              const displayName = getAgentDisplayName(key);
-              return {
-                agent: displayName,
-                rep: reps[key],
-                weight: weights[key] || 0.05,
-                color: getAgentColor(displayName)
-              };
-            });
-            mappedReps.sort((a, b) => b.weight - a.weight);
-            setReputations(mappedReps);
+            if (data.length > 0) {
+              const latest = data[0];
+              const reps = latest.vote_details?.reputations || {};
+              const weights = latest.vote_details?.normalized_weights || {};
+              const mappedReps = Object.keys(reps).map(key => {
+                const displayName = getAgentDisplayName(key);
+                return {
+                  agent: displayName,
+                  rep: reps[key],
+                  weight: weights[key] || 0.05,
+                  color: getAgentColor(displayName)
+                };
+              });
+              mappedReps.sort((a, b) => b.weight - a.weight);
+              setReputations(mappedReps);
+            }
+          } else {
+            // Fall back to simulated configurations when the backend ledger database has no logs
+            setHistory(SIMULATED_CONSENSUS_HISTORY);
+            setSelectedAudit(SIMULATED_CONSENSUS_HISTORY[0]);
+            setReputations(SIMULATED_REPUTATIONS);
           }
         } else {
           throw new Error("API error");
