@@ -18,7 +18,10 @@ export default function LiveSimulation() {
   // Fetch initial run state
   useEffect(() => {
     fetch(`http://localhost:8000/api/v1/simulation/runs/${runId}`)
-      .then(res => res.json())
+      .then(res => {
+        if (!res.ok) throw new Error("Not OK");
+        return res.json();
+      })
       .then(data => setRun(data))
       .catch(() => {
         // Mock fallback
@@ -31,17 +34,26 @@ export default function LiveSimulation() {
     if (run?.status === "running") {
       const interval = setInterval(() => {
         fetch(`http://localhost:8000/api/v1/simulation/runs/${runId}/metrics`)
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error("Not OK");
+            return res.json();
+          })
           .then(data => setMetrics(data))
           .catch(() => {});
           
         fetch(`http://localhost:8000/api/v1/simulation/runs/${runId}/events?limit=20`)
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error("Not OK");
+            return res.json();
+          })
           .then(data => setEvents(data))
           .catch(() => {});
           
         fetch(`http://localhost:8000/api/v1/simulation/runs/${runId}`)
-          .then(res => res.json())
+          .then(res => {
+            if (!res.ok) throw new Error("Not OK");
+            return res.json();
+          })
           .then(data => setRun(data))
           .catch(() => {});
       }, 1000);
@@ -102,7 +114,7 @@ export default function LiveSimulation() {
           <div>
             <h1 style={{ fontSize: 20, fontWeight: 800, color: "var(--text-1)" }}>{run.scenario?.name || "Simulation"}</h1>
             <div style={{ display: "flex", gap: 12, marginTop: 4, fontSize: 13, color: "var(--text-2)" }}>
-              <span>Status: <strong style={{ color: run.status === "completed" ? "var(--success)" : run.status === "running" ? "var(--accent-1)" : "var(--text-1)" }}>{run.status.toUpperCase()}</strong></span>
+              <span>Status: <strong style={{ color: run.status === "completed" ? "var(--success)" : run.status === "running" ? "var(--accent-1)" : "var(--text-1)" }}>{(run.status || "pending").toUpperCase()}</strong></span>
               <span>Target Load: {run.scenario?.target_tps} TPS</span>
             </div>
           </div>
