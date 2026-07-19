@@ -476,9 +476,83 @@ class IntelligenceService:
             return output.getvalue().encode("utf-8"), "text/csv", f"report_{report_id.hex[:6]}.csv"
         
         elif format_ == "pdf":
-            # Formats layout design as text layout PDF
-            pdf_str = f"--- AEGISAI GOVERNANCE EXECUTIVE REPORT ---\nReport ID: {report_id}\nGenerated At: {datetime.utcnow()}\nSummary: {summary}\nDetails: {json.dumps(details, indent=2)}"
-            return pdf_str.encode("utf-8"), "application/pdf", f"report_{report_id.hex[:6]}.pdf"
+            from reportlab.lib.pagesizes import letter
+            from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+            from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+            from reportlab.lib import colors
+
+            pdf_buffer = io.BytesIO()
+            doc = SimpleDocTemplate(
+                pdf_buffer,
+                pagesize=letter,
+                rightMargin=54, leftMargin=54, topMargin=54, bottomMargin=54
+            )
+            
+            styles = getSampleStyleSheet()
+            
+            title_style = ParagraphStyle(
+                'ReportTitle',
+                parent=styles['Heading1'],
+                fontSize=20,
+                leading=24,
+                textColor=colors.HexColor('#0F172A'),
+                spaceAfter=15
+            )
+            
+            section_style = ParagraphStyle(
+                'SectionHeader',
+                parent=styles['Heading2'],
+                fontSize=14,
+                leading=18,
+                textColor=colors.HexColor('#1E293B'),
+                spaceBefore=12,
+                spaceAfter=6
+            )
+            
+            body_style = ParagraphStyle(
+                'ReportBody',
+                parent=styles['BodyText'],
+                fontSize=10,
+                leading=14,
+                textColor=colors.HexColor('#334155'),
+                spaceAfter=10
+            )
+
+            code_style = ParagraphStyle(
+                'ReportCode',
+                parent=styles['Code'],
+                fontSize=9,
+                leading=12,
+                textColor=colors.HexColor('#0F172A'),
+                backColor=colors.HexColor('#F8FAFC'),
+                borderColor=colors.HexColor('#E2E8F0'),
+                borderWidth=0.5,
+                borderPadding=8,
+                spaceBefore=10,
+                spaceAfter=10
+            )
+            
+            story = []
+            
+            story.append(Paragraph("AEGISAI GOVERNANCE EXECUTIVE REPORT", title_style))
+            story.append(Spacer(1, 10))
+            
+            story.append(Paragraph("<b>Report Metadata</b>", section_style))
+            story.append(Paragraph(f"<b>Report ID:</b> {report_id}", body_style))
+            story.append(Paragraph(f"<b>Generated At:</b> {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC')}", body_style))
+            story.append(Paragraph(f"<b>Summary:</b> {summary}", body_style))
+            story.append(Spacer(1, 10))
+            
+            story.append(Paragraph("<b>Detailed Governance Findings</b>", section_style))
+            details_json = json.dumps(details, indent=2)
+            details_formatted = details_json.replace('\n', '<br/>').replace(' ', '&nbsp;')
+            story.append(Paragraph(details_formatted, code_style))
+            
+            doc.build(story)
+            pdf_bytes = pdf_buffer.getvalue()
+            pdf_buffer.close()
+            
+            return pdf_bytes, "application/pdf", f"report_{report_id.hex[:6]}.pdf"
             
         else: # json
             json_str = json.dumps(details, indent=2, default=str)
