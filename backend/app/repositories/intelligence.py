@@ -5,7 +5,8 @@ from sqlalchemy import select, update, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.research import (
     GovernanceScore, GovernanceHistory, AgentReputation, ReputationHistory,
-    BenchmarkRun, BenchmarkResult, GovernanceReport, FailureIndex, MaturityReport
+    BenchmarkRun, BenchmarkResult, GovernanceReport, FailureIndex, MaturityReport,
+    ResearchProject, ResearchExperiment, ExperimentRun
 )
 
 class IntelligenceRepository:
@@ -101,15 +102,59 @@ class IntelligenceRepository:
         return rep
 
     # --- Benchmarking ---
-    async def create_benchmark_run(self, parameters: Dict[str, Any]) -> BenchmarkRun:
+        # 1. Ensure default project exists
+        project_name = "Platform Benchmarks Project"
+        res_p = await self.db.execute(select(ResearchProject).where(ResearchProject.name == project_name))
+        project = res_p.scalars().first()
+        if not project:
+            project = ResearchProject(
+                id=uuid.uuid4(),
+                name=project_name,
+                description="Auto-generated project for platform benchmarks"
+            )
+            self.db.add(project)
+            await self.db.commit()
+            await self.db.refresh(project)
+
+        # 2. Ensure default experiment exists
+        experiment_name = "Platform Algorithms Evaluation"
+        res_e = await self.db.execute(select(ResearchExperiment).where(ResearchExperiment.name == experiment_name))
+        experiment = res_e.scalars().first()
+        if not experiment:
+            experiment = ResearchExperiment(
+                id=uuid.uuid4(),
+                project_id=project.id,
+                name=experiment_name,
+                description="Auto-generated experiment for platform benchmarks",
+                config_data={}
+            )
+            self.db.add(experiment)
+            await self.db.commit()
+            await self.db.refresh(experiment)
+
+        # 3. Create run ID
+        run_id = uuid.uuid4()
+
+        # 4. Create matching ExperimentRun
+        exp_run = ExperimentRun(
+            id=run_id,
+            experiment_id=experiment.id,
+            status="completed",
+            parameters=parameters,
+            metrics={}
+        )
+        self.db.add(exp_run)
+
+        # 5. Create BenchmarkRun
         run = BenchmarkRun(
-            id=uuid.uuid4(),
+            id=run_id,
             status="pending",
             parameters=parameters,
             metrics={},
             started_at=datetime.utcnow()
         )
         self.db.add(run)
+
         await self.db.commit()
         await self.db.refresh(run)
         return run
