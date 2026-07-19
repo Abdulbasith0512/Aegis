@@ -12,6 +12,7 @@ import {
   AlertTriangle, BarChart3, Settings, Search,
   Bell, Sun, Moon, Server, ChevronDown, X, LogOut,
   User as UserIcon, ChevronLeft, ChevronRight, Home, ShieldAlert, Cpu, Network, TestTube2, Layers
+} from "lucide-react";
 
 // ── Sidebar Navigation Config ──────────────────────────────────────────────
 const NAV_GROUPS = [
