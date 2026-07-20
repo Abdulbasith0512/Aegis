@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 interface CopilotMessage {
   id: string;
@@ -8,6 +8,7 @@ interface CopilotMessage {
   content: string;
   sources?: string[];
   hasReport?: boolean;
+  reportHtml?: string;
 }
 
 interface ChatSession {
@@ -46,27 +47,116 @@ const PRESEEDED_SESSIONS: ChatSession[] = [
   }
 ];
 
+const mapBackendMessage = (msg: any): CopilotMessage => {
+  let citations: string[] = [];
+  if (msg.sources && msg.sources.citations) {
+    citations = msg.sources.citations;
+  }
+  return {
+    id: msg.id,
+    role: msg.role as "user" | "assistant",
+    content: msg.content,
+    sources: citations,
+    hasReport: !!msg.report_html,
+    reportHtml: msg.report_html
+  };
+};
+
+const mapBackendSession = (sess: any): ChatSession => {
+  return {
+    id: sess.id,
+    title: sess.title,
+    messages: (sess.messages || []).map(mapBackendMessage)
+  };
+};
+
 export default function RegulatoryCopilot() {
   const [sessions, setSessions] = useState<ChatSession[]>(PRESEEDED_SESSIONS);
   const [activeSession, setActiveSession] = useState<ChatSession>(PRESEEDED_SESSIONS[0]);
   const [inputVal, setInputVal] = useState("");
   const [clickCount, setClickCount] = useState(0);
 
-  const handleSend = (text: string) => {
+  useEffect(() => {
+    const fetchSessions = async () => {
+      try {
+        const res = await fetch("http://localhost:8000/api/v1/copilot/sessions");
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.length > 0) {
+            const mapped = data.map(mapBackendSession);
+            setSessions(mapped);
+            setActiveSession(mapped[0]);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to load Copilot sessions from backend:", err);
+      }
+    };
+    fetchSessions();
+  }, []);
+
+  const handleSend = async (text: string) => {
     if (!text.trim()) return;
 
     const query = text.toLowerCase().trim();
     const nextCount = clickCount + 1;
     setClickCount(nextCount);
     
-    // Create user message
+    // 1. Instantly append User Message to UI
     const userMsg: CopilotMessage = {
       id: `msg-usr-${nextCount}`,
       role: "user",
       content: text
     };
+    
+    const updatedMessages = [...activeSession.messages, userMsg];
+    const temporarySession = { ...activeSession, messages: updatedMessages };
+    setActiveSession(temporarySession);
+    setSessions(sessions.map(s => s.id === activeSession.id ? temporarySession : s));
+    setInputVal("");
 
-    // Formulate assistant response based on prompt
+    // 2. Attempt query endpoint
+    let sessionUuid = activeSession.id;
+    let isMockSession = activeSession.id.startsWith("session-") || activeSession.id.startsWith("sess-");
+
+    try {
+      if (isMockSession) {
+        const createRes = await fetch("http://localhost:8000/api/v1/copilot/sessions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ title: activeSession.title })
+        });
+        if (createRes.ok) {
+          const createdSess = await createRes.json();
+          sessionUuid = createdSess.id;
+        }
+      }
+
+      const queryRes = await fetch(`http://localhost:8000/api/v1/copilot/sessions/${sessionUuid}/query`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ query: text })
+      });
+
+      if (queryRes.ok) {
+        const backendMsg = await queryRes.json();
+        const assistantMsg = mapBackendMessage(backendMsg);
+
+        const finalSession: ChatSession = {
+          id: sessionUuid,
+          title: activeSession.title,
+          messages: [...updatedMessages, assistantMsg]
+        };
+
+        setActiveSession(finalSession);
+        setSessions(sessions.map(s => s.id === activeSession.id ? finalSession : s));
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to query regulatory copilot API, falling back to local responses:", err);
+    }
+
+    // 3. Fallback: Local response parsing (offline sandbox mode)
     let responseContent = "";
     let sources: string[] = [];
     let hasReport = false;
@@ -100,24 +190,47 @@ export default function RegulatoryCopilot() {
       hasReport
     };
 
-    // Update session messages state
-    const updatedSession = {
+    const finalSession = {
       ...activeSession,
-      messages: [...activeSession.messages, userMsg, assistantMsg]
+      messages: [...updatedMessages, assistantMsg]
     };
 
-    setActiveSession(updatedSession);
-    setSessions(sessions.map(s => s.id === activeSession.id ? updatedSession : s));
-    setInputVal("");
+    setActiveSession(finalSession);
+    setSessions(sessions.map(s => s.id === activeSession.id ? finalSession : s));
   };
 
-  const startNewSession = () => {
+  const startNewSession = async () => {
     const nextCount = clickCount + 1;
     setClickCount(nextCount);
+    const title = `Audit Conversation #${sessions.length + 1}`;
+    
+    try {
+      const res = await fetch("http://localhost:8000/api/v1/copilot/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const newSess = mapBackendSession(data);
+        if (newSess.messages.length === 0) {
+          newSess.messages.push({
+            id: `msg-ast-init-${nextCount}`,
+            role: "assistant",
+            content: "### Regulatory Copilot Advisor\n\nHello! I am your AI compliance companion. You can prompt me to:\n1. *Show today's policy violations*\n2. *Generate RBI report*\n3. *Explain transaction decisions*\n4. *List drift incidents*\n5. *Summarize AI health*\n6. *Generate audit report*"
+          });
+        }
+        setSessions([newSess, ...sessions]);
+        setActiveSession(newSess);
+        return;
+      }
+    } catch (err) {
+      console.error("Failed to create new session on backend, falling back to local:", err);
+    }
     
     const newSess: ChatSession = {
       id: `sess-${nextCount}`,
-      title: `Audit Conversation #${sessions.length + 1}`,
+      title,
       messages: [
         {
           id: `m-init-${nextCount}`,
@@ -130,25 +243,327 @@ export default function RegulatoryCopilot() {
     setActiveSession(newSess);
   };
 
-  const downloadReportHTML = () => {
-    // Generate and download a mock HTML report file representing the PDF-Ready output
-    const reportContent = `
-    <html>
-    <body style="font-family: sans-serif; padding: 40px;">
-      <h2>Regulatory Audit Assessment Report</h2>
-      <hr/>
-      <p>Report ID: EXP-REG-${activeSession.id.toUpperCase()}</p>
-      <p>Compiled on: ${new Date().toISOString()}</p>
-      <h3>Executive Summary</h3>
-      <p>All core governance metrics passed evaluations with zero violations. Integrity checks verify WORM-ledger signature chains sequence intact.</p>
-    </body>
-    </html>
-    `;
+  const downloadReportHTML = (msg: CopilotMessage) => {
+    const reportContent = msg.reportHtml || `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>AegisAI Regulatory Audit Assessment Report</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: #1e293b;
+      line-height: 1.5;
+      margin: 0;
+      padding: 0;
+      background-color: #f8fafc;
+    }
+    .report-container {
+      max-width: 800px;
+      margin: 40px auto;
+      background-color: #ffffff;
+      padding: 45px 55px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      border-top: 8px solid #10b981;
+    }
+    .header-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 25px;
+    }
+    .header-logo {
+      font-size: 24px;
+      font-weight: 850;
+      color: #0f172a;
+      letter-spacing: -0.025em;
+    }
+    .header-logo span {
+      color: #10b981;
+    }
+    .header-title {
+      text-align: right;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #64748b;
+      font-weight: 700;
+    }
+    .divider {
+      height: 1px;
+      background-color: #e2e8f0;
+      margin: 20px 0;
+    }
+    h1 {
+      font-size: 24px;
+      font-weight: 800;
+      color: #0f172a;
+      margin: 0 0 20px 0;
+      letter-spacing: -0.025em;
+    }
+    .meta-table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: #f1f5f9;
+      border-radius: 6px;
+      margin-bottom: 30px;
+    }
+    .meta-table td {
+      padding: 12px 20px;
+      width: 50%;
+      vertical-align: top;
+    }
+    .meta-label {
+      color: #475569;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+    .meta-value {
+      color: #0f172a;
+      font-weight: 600;
+      font-size: 12px;
+      font-family: monospace;
+    }
+    h2 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+      margin: 0 0 10px 0;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 6px;
+    }
+    .summary-box {
+      border-left: 4px solid #10b981;
+      background-color: #f0fdf4;
+      padding: 15px;
+      border-radius: 0 6px 6px 0;
+      margin-bottom: 30px;
+    }
+    .summary-box p {
+      margin: 0;
+      font-size: 13px;
+      color: #065f46;
+      font-weight: 500;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .data-table th {
+      background-color: #f8fafc;
+      color: #475569;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 10px 12px;
+      border-bottom: 2px solid #e2e8f0;
+      text-align: left;
+    }
+    .data-table td {
+      padding: 10px 12px;
+      font-size: 12px;
+      border-bottom: 1px solid #e2e8f0;
+      color: #334155;
+    }
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      font-size: 10px;
+      font-weight: 700;
+      border-radius: 9999px;
+      text-transform: uppercase;
+    }
+    .badge-success {
+      background-color: #dcfce7 !important;
+      color: #15803d !important;
+    }
+    .badge-info {
+      background-color: #e0f2fe !important;
+      color: #0369a1 !important;
+    }
+    .footer-signatures {
+      margin-top: 40px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .sig-cell {
+      width: 50%;
+      padding: 10px 20px;
+    }
+    .sig-line {
+      border-top: 1px solid #cbd5e1;
+      margin-top: 30px;
+      padding-top: 6px;
+      text-align: center;
+      font-size: 11px;
+      color: #64748b;
+    }
+    @media print {
+      body {
+        background-color: #ffffff;
+      }
+      .report-container {
+        margin: 0;
+        padding: 0;
+        box-shadow: none;
+        border-top: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="report-container">
+    <table class="header-table">
+      <tr>
+        <td class="header-logo">Aegis<span>AI</span></td>
+        <td class="header-title">Governance Suite &bull; Compliance Check</td>
+      </tr>
+    </table>
+    
+    <div class="divider"></div>
+    
+    <h1>Regulatory Audit Assessment Report</h1>
+    
+    <table class="meta-table">
+      <tr>
+        <td>
+          <div class="meta-label">Report Identifier</div>
+          <div class="meta-value">EXP-REG-${activeSession.id.toUpperCase()}</div>
+        </td>
+        <td>
+          <div class="meta-label">Compiled Timestamp</div>
+          <div class="meta-value">${new Date().toISOString()}</div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="meta-label">Compliance Standard</div>
+          <div class="meta-value">RBI / BASEL III / PSD2</div>
+        </td>
+        <td>
+          <div class="meta-label">Authority Entity</div>
+          <div class="meta-value">AegisAI Copilot Advisor</div>
+        </td>
+      </tr>
+    </table>
+    
+    <div class="section">
+      <h2>1. Executive Summary</h2>
+      <div class="summary-box">
+        <p>All core governance metrics passed evaluations with zero violations. Integrity checks verify WORM-ledger signature chains sequence intact.</p>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2>2. Agent Assessment Matrix</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Evaluating Node Agent</th>
+            <th>Verification Status</th>
+            <th>Reputation Weight</th>
+            <th>Audit Outcome</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Compliance Agent</td>
+            <td><span class="badge badge-success">Passed</span></td>
+            <td>26%</td>
+            <td>Verified &bull; Standard Run</td>
+          </tr>
+          <tr>
+            <td>Fraud Agent</td>
+            <td><span class="badge badge-success">Passed</span></td>
+            <td>21%</td>
+            <td>Verified &bull; Standard Run</td>
+          </tr>
+          <tr>
+            <td>AML Agent</td>
+            <td><span class="badge badge-success">Passed</span></td>
+            <td>14%</td>
+            <td>Verified &bull; Standard Run</td>
+          </tr>
+          <tr>
+            <td>KYC Agent</td>
+            <td><span class="badge badge-success">Passed</span></td>
+            <td>16%</td>
+            <td>Verified &bull; Standard Run</td>
+          </tr>
+          <tr>
+            <td>Device Agent</td>
+            <td><span class="badge badge-success">Passed</span></td>
+            <td>9%</td>
+            <td>Verified &bull; Standard Run</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section">
+      <h2>3. Ledger Integrity & Security Seals</h2>
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Integrity Check Type</th>
+            <th>Security Status</th>
+            <th>Target Ledger</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>WORM Signature Chain Verification</td>
+            <td><span class="badge badge-success">Secure</span></td>
+            <td>aegis-blockchain-ledger-v1</td>
+          </tr>
+          <tr>
+            <td>Dynamic Reputation Alignment</td>
+            <td><span class="badge badge-success">Aligned</span></td>
+            <td>consensus-telemetry-nodes</td>
+          </tr>
+          <tr>
+            <td>Drift Latency Boundary Check</td>
+            <td><span class="badge badge-info">Within SLA</span></td>
+            <td>trust-metrics-ledger</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="divider"></div>
+    
+    <table class="footer-signatures">
+      <tr>
+        <td class="sig-cell">
+          <div class="sig-line">AegisAI Auditor Signature</div>
+        </td>
+        <td class="sig-cell">
+          <div class="sig-line">Compliance Officer Approval Seal</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>`;
+
     const blob = new Blob([reportContent], { type: "text/html" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `AegisAI_Regulatory_Report_${activeSession.id}.html`;
+    link.download = `AegisAI_Regulatory_Report_${msg.id}.html`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -260,7 +675,7 @@ export default function RegulatoryCopilot() {
                 {/* Glowing PDF ready download button */}
                 {m.hasReport && (
                   <button
-                    onClick={downloadReportHTML}
+                    onClick={() => downloadReportHTML(m)}
                     className="mt-4 px-4 py-2 rounded bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 text-[10px] font-black uppercase tracking-wider font-mono transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.1)] block"
                   >
                     📥 Download PDF-Ready Report
