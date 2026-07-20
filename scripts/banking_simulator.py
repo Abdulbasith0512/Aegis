@@ -236,9 +236,9 @@ async def generate_simulation() -> None:
     agent_version_map = {}
     for a in agents:
         vid = uuid.uuid4()
-        versions.append((vid, a[0], "v1.0.0", hashlib.sha256(a[1].encode()).hexdigest()[:15], 0.96, True, datetime.utcnow()))
+        versions.append((vid, a[0], "v1.0.0", hashlib.sha256(a[1].encode()).hexdigest()[:15], 0.96, True, datetime.utcnow(), "{}", "{}"))
         agent_version_map[a[1]] = vid
-    await bulk_load_table(conn, "model_versions", ["id", "agent_id", "version_string", "parameters_hash", "accuracy_benchmark", "is_active", "deployed_at"], versions)
+    await bulk_load_table(conn, "model_versions", ["id", "agent_id", "version_string", "parameters_hash", "accuracy_benchmark", "is_active", "deployed_at", "hyperparameters", "metrics"], versions)
 
     # --- 8. Generate Transactions stream (Bulk load in chunks) ---
     logger.info("Simulating over 950,000 transaction records with integrated behaviors...")
@@ -285,7 +285,7 @@ async def generate_simulation() -> None:
             if rand_val < 0.40: # Card purchase at merchant
                 tx_type = "payment"
                 merchant_id = random.choice(merchant_ids_arr)
-                amount = round(random.exponential(scale=45.0) + 1.5, 2) # Exponential purchase sizes
+                amount = round(random.expovariate(1.0 / 45.0) + 1.5, 2) # Exponential purchase sizes
                 device_id = random.choice(device_ids_arr)
             elif rand_val < 0.85: # Transfer to beneficiary
                 tx_type = "transfer"
@@ -414,7 +414,7 @@ async def generate_simulation() -> None:
         vector = [0.12] * 384 # mock pgvector float array
         explanations.append((
             uuid.uuid4(), pred_id, f"Evaluation verdict is {'high' if is_fraud else 'low'} risk due to parameters.",
-            json.dumps(shap), vector, datetime.utcnow()
+            "{}", "{}", "{}", json.dumps(shap), "Evaluation check completed", "{}", "{}", 1.0, vector, datetime.utcnow()
         ))
         
         # Trust Score
@@ -444,7 +444,7 @@ async def generate_simulation() -> None:
             rev_status = "declined" if is_fraud else "approved"
             rev_id = uuid.uuid4()
             reviews.append((
-                rev_id, tx_id, reviewer, rev_status, f"Audited anomaly check: {rev_status}", datetime.utcnow(), datetime.utcnow()
+                rev_id, tx_id, reviewer, rev_status, f"Audited anomaly check: {rev_status}", datetime.utcnow(), datetime.utcnow(), datetime.utcnow() + timedelta(hours=2)
             ))
             
             # Security Alert
@@ -462,11 +462,16 @@ async def generate_simulation() -> None:
             ))
 
     await bulk_load_table(conn, "predictions", ["id", "transaction_id", "model_version_id", "prediction_output", "confidence_score", "latency_ms", "created_at"], predictions)
-    await bulk_load_table(conn, "explanations", ["id", "prediction_id", "explanation_text", "feature_attributions", "explanation_vector", "created_at"], explanations)
+    await bulk_load_table(conn, "explanations", [
+        "id", "prediction_id", "human_readable", "machine_readable",
+        "decision_timeline", "evidence_graph", "feature_importance",
+        "confidence_reasoning", "supporting_policies", "contributing_agents",
+        "explainability_score", "explanation_vector", "created_at"
+    ], explanations)
     await bulk_load_table(conn, "trust_scores", ["id", "transaction_id", "score", "weights_configuration", "reasons", "created_at"], trust_scores)
     await bulk_load_table(conn, "policy_checks", ["id", "transaction_id", "rule_id", "status", "details", "executed_at"], policy_checks)
     await bulk_load_table(conn, "consensus_votes", ["id", "transaction_id", "decision_verdict", "vote_details", "consensus_score", "created_at"], votes)
-    await bulk_load_table(conn, "human_reviews", ["id", "transaction_id", "reviewer_id", "status", "comments", "assigned_at", "reviewed_at"], reviews)
+    await bulk_load_table(conn, "human_reviews", ["id", "transaction_id", "reviewer_id", "status", "comments", "assigned_at", "reviewed_at", "sla_deadline"], reviews)
     await bulk_load_table(conn, "alerts", ["id", "transaction_id", "severity", "message", "is_resolved", "created_at"], alerts)
     await bulk_load_table(conn, "incidents", ["id", "alert_id", "description", "status", "severity", "created_at", "resolved_at"], incidents)
 
