@@ -57,6 +57,9 @@ class PolicyEngine:
         Dynamically extracts nested dictionary values using dot-notation.
         E.g. resolve_field("account.customer.status", tx) -> tx["account"]["customer"]["status"]
         """
+        if field_path == "trust_score" and "trust_score" not in obj:
+            return 100
+
         parts = field_path.split(".")
         current = obj
         for part in parts:
