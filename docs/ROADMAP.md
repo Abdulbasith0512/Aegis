@@ -74,13 +74,13 @@ This document outlines the ten development phases for AegisAI, progressing from 
 
 ## Phase 9: Deployment
 * **Goal**: Configure scale-out configurations, container images, and cloud deployments.
-- [ ] Write Dockerfiles for production builds.
+- [x] Write Dockerfiles for production builds.
 - [ ] Develop Kubernetes Helm charts with network policies.
-- [ ] Configure Prometheus metrics scraping and Grafana metrics templates.
+- [x] Configure Prometheus metrics scraping and Grafana metrics templates.
 
 ---
 
 ## Phase 10: Research Paper
 * **Goal**: Document architecture findings, chaos recovery benchmarks, and trust score accuracy in a structured report.
-- [ ] Run benchmark tests under varying simulated attack scenarios.
-- [ ] Draft whitepaper sections (Introduction, System Design, Experimental Benchmarks, Conclusion).
+- [x] Run benchmark tests under varying simulated attack scenarios.
+- [x] Draft whitepaper sections (Introduction, System Design, Experimental Benchmarks, Conclusion).
