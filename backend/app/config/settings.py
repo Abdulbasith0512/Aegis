@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     QDRANT_HOST: str = Field(default="localhost")
     QDRANT_PORT: int = Field(default=6333)
     QDRANT_URL: str = Field(default="http://localhost:6333")
+    QDRANT_API_KEY: str = Field(default="")
 
     # Third-Party Model Providers Credentials
     OPENAI_API_KEY: str = Field(default="")

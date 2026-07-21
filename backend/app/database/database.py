@@ -60,7 +60,7 @@ async def get_redis() -> AsyncGenerator[Redis, None]:
         pass
 
 # 3. Qdrant Client Builder
-qdrant_client: QdrantClient = QdrantClient(url=settings.QDRANT_URL)
+qdrant_client: QdrantClient = QdrantClient(url=settings.QDRANT_URL, api_key=settings.QDRANT_API_KEY or None)
 
 def get_qdrant() -> QdrantClient:
     """
