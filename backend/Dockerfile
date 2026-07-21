@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY backend/requirements.txt ./backend/
-RUN pip install --no-cache-dir --user -r backend/requirements.txt
+RUN pip install --no-cache-dir --default-timeout=100 --user -r backend/requirements.txt
 
 FROM python:3.12-slim AS runner
 
@@ -20,6 +20,7 @@ ENV PATH=/root/.local/bin:$PATH
 # Copy backend app and structural ML/agents dependencies
 COPY backend ./backend
 COPY agents ./agents
+COPY ml ./ml
 
 # Expose API gateway port
 EXPOSE 8000

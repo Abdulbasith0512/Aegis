@@ -1,5 +1,5 @@
 # Multi-stage production container setup for AegisAI Next.js Frontend
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -13,7 +13,7 @@ COPY frontend/ ./
 RUN npm run build
 
 # Runtime runner stage
-FROM node:18-alpine AS runner
+FROM node:20-alpine AS runner
 
 WORKDIR /app/frontend
 

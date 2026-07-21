@@ -1,0 +1,9 @@
+# Exclude local dependency directories and compile output builds from Docker build context
+.git
+.agents
+.gemini
+backend/.venv
+backend/__pycache__
+frontend/node_modules
+frontend/.next
+frontend/out
